@@ -172,28 +172,32 @@ export default function CalendarPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h2 className="text-2xl font-bold">לוח חודשי</h2>
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold">לוח חודשי</h2>
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={goToPrevMonth}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            className="px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            aria-label="חודש קודם"
           >
-            &larr; הקודם
+            <span className="hidden sm:inline">&larr; הקודם</span>
+            <span className="sm:hidden">&larr;</span>
           </button>
           <button
             onClick={goToToday}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            className="px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
           >
             היום
           </button>
           <button
             onClick={goToNextMonth}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            className="px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            aria-label="חודש הבא"
           >
-            הבא &rarr;
+            <span className="hidden sm:inline">הבא &rarr;</span>
+            <span className="sm:hidden">&rarr;</span>
           </button>
-          <span className="text-lg font-semibold min-w-[140px] text-center">
+          <span className="text-sm sm:text-lg font-semibold min-w-[100px] sm:min-w-[140px] text-center">
             {MONTH_NAMES[month]} {year}
           </span>
         </div>
@@ -204,15 +208,16 @@ export default function CalendarPage() {
       )}
 
       {!loading && (
-        <div className="bg-white dark:bg-gray-900 shadow rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg overflow-hidden">
           {/* Day-of-week header */}
-          <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-            {DAYS_OF_WEEK.map((day) => (
+          <div className="grid grid-cols-7 border-b border-gray-200 dark:border-[#2a2a2a]">
+            {DAYS_OF_WEEK.map((day, i) => (
               <div
                 key={day}
-                className="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"
+                className="px-1 sm:px-2 py-2 text-center text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400"
               >
-                {day}
+                <span className="hidden sm:inline">{day}</span>
+                <span className="sm:hidden">{day.slice(0, 2)}</span>
               </div>
             ))}
           </div>
@@ -234,7 +239,7 @@ export default function CalendarPage() {
                     setSelectedDay(cell.dateStr === selectedDay ? null : cell.dateStr)
                   }
                   className={`
-                    min-h-[110px] border border-gray-100 dark:border-gray-800 p-1.5 text-right align-top
+                    min-h-[70px] sm:min-h-[110px] border border-gray-100 dark:border-gray-800 p-1 sm:p-1.5 text-right align-top
                     transition-colors cursor-pointer
                     ${!cell.isCurrentMonth ? "bg-gray-50 dark:bg-gray-950 opacity-40" : ""}
                     ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""}
@@ -244,23 +249,23 @@ export default function CalendarPage() {
                 >
                   <div className="flex flex-col h-full gap-0.5">
                     {/* Gregorian date */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       <span
                         className={`
-                          text-sm font-medium inline-flex items-center justify-center w-7 h-7 rounded-full shrink-0
+                          text-xs sm:text-sm font-medium inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-full shrink-0
                           ${isToday ? "bg-blue-600 text-white" : ""}
                         `}
                       >
                         {cell.date}
                       </span>
                       {hebrewInfo?.isShabbat && cell.isCurrentMonth && (
-                        <span className="text-[9px] text-gray-400 dark:text-gray-500">שבת</span>
+                        <span className="hidden sm:inline text-[9px] text-gray-400 dark:text-gray-500">שבת</span>
                       )}
                     </div>
 
-                    {/* Hebrew date */}
+                    {/* Hebrew date - hidden on mobile */}
                     {hebrewInfo && (
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight px-0.5">
+                      <span className="hidden sm:block text-[10px] text-gray-400 dark:text-gray-500 leading-tight px-0.5">
                         {hebrewInfo.display}
                       </span>
                     )}
@@ -268,17 +273,18 @@ export default function CalendarPage() {
                     {/* Jewish holiday */}
                     {hebrewInfo?.holiday && cell.isCurrentMonth && (
                       <div
-                        className="text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                        className="text-[8px] sm:text-[10px] leading-tight px-0.5 sm:px-1 py-0.5 rounded truncate bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
                         title={hebrewInfo.holiday}
                       >
-                        {hebrewInfo.holiday}
+                        <span className="hidden sm:inline">{hebrewInfo.holiday}</span>
+                        <span className="sm:hidden">{hebrewInfo.holiday.slice(0, 6)}...</span>
                       </div>
                     )}
 
-                    {/* Special / international day */}
+                    {/* Special / international day - hidden on mobile */}
                     {specialDay && cell.isCurrentMonth && (
                       <div
-                        className="text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+                        className="hidden sm:block text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
                         title={specialDay}
                       >
                         {specialDay}
@@ -288,23 +294,32 @@ export default function CalendarPage() {
                     {/* Posts */}
                     {cell.isCurrentMonth && dayPosts.length > 0 && (
                       <div className="flex flex-col gap-0.5 mt-auto">
-                        {dayPosts.slice(0, 2).map((post) => {
-                          const deptColor = getDeptColor(post.department, deptColorMap);
-                          return (
-                            <div
-                              key={post.id}
-                              className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate ${deptColor}`}
-                              title={`${getPlatformLabel(post.platform)} - ${post.department}`}
-                            >
-                              {getPlatformLabel(post.platform)}
-                            </div>
-                          );
-                        })}
-                        {dayPosts.length > 2 && (
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 px-1">
-                            +{dayPosts.length - 2} נוספים
+                        {/* Mobile: just show count */}
+                        <div className="sm:hidden">
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                            {dayPosts.length}
                           </span>
-                        )}
+                        </div>
+                        {/* Desktop: show posts */}
+                        <div className="hidden sm:flex flex-col gap-0.5">
+                          {dayPosts.slice(0, 2).map((post) => {
+                            const deptColor = getDeptColor(post.department, deptColorMap);
+                            return (
+                              <div
+                                key={post.id}
+                                className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate ${deptColor}`}
+                                title={`${getPlatformLabel(post.platform)} - ${post.department}`}
+                              >
+                                {getPlatformLabel(post.platform)}
+                              </div>
+                            );
+                          })}
+                          {dayPosts.length > 2 && (
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 px-1">
+                              +{dayPosts.length - 2} נוספים
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -317,10 +332,10 @@ export default function CalendarPage() {
 
       {/* Selected day detail panel */}
       {selectedDay && !loading && (
-        <div className="mt-6 bg-white dark:bg-gray-900 shadow rounded-lg p-5">
-          <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="mt-4 sm:mt-6 bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-4">
             <div>
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-base sm:text-lg font-semibold">
                 {new Date(selectedDay + "T00:00:00").toLocaleDateString("he-IL", {
                   weekday: "long",
                   day: "numeric",
@@ -336,17 +351,17 @@ export default function CalendarPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {selectedHebrew?.holiday && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                   {selectedHebrew.holiday}
                 </span>
               )}
               {selectedSpecial && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                   {selectedSpecial}
                 </span>
               )}
               {selectedHebrew?.isShabbat && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                   שבת
                 </span>
               )}
@@ -354,7 +369,7 @@ export default function CalendarPage() {
           </div>
 
           {selectedPosts.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">אין פרסומים מתוכננים</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">אין פרסומים מתוכננים</p>
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {selectedPosts.map((post) => {
@@ -365,11 +380,11 @@ export default function CalendarPage() {
                   <Link
                     key={post.id}
                     href={`/posts/${post.id}`}
-                    className="flex items-center gap-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 -mx-2 px-2 rounded transition-colors"
+                    className="flex items-start sm:items-center gap-3 sm:gap-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 -mx-2 px-2 rounded transition-colors"
                   >
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${deptColor}`} />
+                    <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 sm:mt-0 ${deptColor}`} />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="text-sm font-medium">
                           {getPlatformLabel(post.platform)}
                         </span>
@@ -379,17 +394,22 @@ export default function CalendarPage() {
                         >
                           {post.scheduled_time.slice(0, 5)}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {post.department}
-                        </span>
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.color}`}
                         >
                           {statusInfo.label}
                         </span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {post.department}
+                        </span>
+                      </div>
+                      {post.content && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1 sm:hidden">
+                          {post.content}
+                        </p>
+                      )}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px] hidden sm:block">
                       {post.content}
@@ -402,15 +422,15 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* Legend */}
+      {/* Legend - simplified on mobile */}
       {!loading && (
-        <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+        <div className="mt-4 flex flex-wrap gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           {/* Holiday & special day legend */}
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-900" />
-            <span>חג יהודי</span>
+            <span>חג</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="hidden sm:flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-orange-100 dark:bg-orange-900" />
             <span>יום מיוחד</span>
           </div>
@@ -420,7 +440,7 @@ export default function CalendarPage() {
             return (
               <div key={dept} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded ${color}`} />
-                <span>{dept}</span>
+                <span className="truncate max-w-[80px] sm:max-w-none">{dept}</span>
               </div>
             );
           })}

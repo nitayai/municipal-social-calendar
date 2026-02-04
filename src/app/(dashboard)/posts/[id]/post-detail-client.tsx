@@ -318,13 +318,13 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
     `${base} ${
       touched[name] && fieldErrors[name as keyof FieldErrors]
         ? "border-red-500"
-        : "border-gray-300 dark:border-gray-700"
+        : "border-gray-300 dark:border-[#3a3a3a]"
     }`;
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">
           {canEdit
             ? canApprove ? "בדיקה ואישור פוסט" : "עריכת פוסט"
             : "צפייה בפוסט"}
@@ -332,9 +332,9 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
         <StatusBadge status={post.status} />
       </div>
 
-      <div className="bg-white dark:bg-gray-900 shadow rounded-lg p-6 max-w-2xl">
+      <div className="bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 sm:p-6 max-w-2xl">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="scheduled_date" className="block text-sm font-medium mb-1">
                 {canEdit && <RequiredMark />}
@@ -382,7 +382,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="platform" className="block text-sm font-medium mb-1">
                 {canEdit && <RequiredMark />}
@@ -472,7 +472,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
                 type="url"
                 value={formData.external_link}
                 onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://example.com"
                 dir="ltr"
               />
@@ -505,7 +505,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
                   type="file"
                   onChange={handleFileChange}
                   accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900 dark:file:text-blue-200"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900 dark:file:text-blue-200"
                 />
                 {selectedFile && (
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -555,7 +555,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
                 value={approvalComment}
                 onChange={(e) => setApprovalComment(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 placeholder="הוסף הערה..."
               />
             </div>

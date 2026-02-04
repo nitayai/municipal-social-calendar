@@ -172,11 +172,11 @@ export default function NewPostPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">פוסט חדש</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">פוסט חדש</h2>
 
-      <div className="bg-white dark:bg-gray-900 shadow rounded-lg p-6 max-w-2xl">
+      <div className="bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 sm:p-6 max-w-2xl">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="scheduled_date" className="block text-sm font-medium mb-1">
                 <RequiredMark />
@@ -191,7 +191,7 @@ export default function NewPostPage() {
                 className={`w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   touched.scheduled_date && fieldErrors.scheduled_date
                     ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
+                    : "border-gray-300 dark:border-[#3a3a3a]"
                 }`}
                 dir="ltr"
               />
@@ -214,7 +214,7 @@ export default function NewPostPage() {
                 className={`w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   touched.scheduled_time && fieldErrors.scheduled_time
                     ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
+                    : "border-gray-300 dark:border-[#3a3a3a]"
                 }`}
                 dir="ltr"
               />
@@ -224,7 +224,7 @@ export default function NewPostPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="platform" className="block text-sm font-medium mb-1">
                 <RequiredMark />
@@ -238,7 +238,7 @@ export default function NewPostPage() {
                 className={`w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   touched.platform && fieldErrors.platform
                     ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
+                    : "border-gray-300 dark:border-[#3a3a3a]"
                 }`}
               >
                 <option value="">בחר פלטפורמה</option>
@@ -267,7 +267,7 @@ export default function NewPostPage() {
                 className={`w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
                   touched.department_id && fieldErrors.department_id
                     ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
+                    : "border-gray-300 dark:border-[#3a3a3a]"
                 }`}
               >
                 <option value="">בחר מחלקה</option>
@@ -297,7 +297,7 @@ export default function NewPostPage() {
               className={`w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
                 touched.content && fieldErrors.content
                   ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-700"
+                  : "border-gray-300 dark:border-[#3a3a3a]"
               }`}
               placeholder="כתוב את תוכן הפוסט כאן..."
             />
@@ -315,7 +315,7 @@ export default function NewPostPage() {
               type="url"
               value={formData.external_link}
               onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="https://example.com"
               dir="ltr"
             />
@@ -331,7 +331,7 @@ export default function NewPostPage() {
               type="file"
               onChange={handleFileChange}
               accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900 dark:file:text-blue-200"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900 dark:file:text-blue-200"
             />
             {selectedFile && (
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -349,12 +349,12 @@ export default function NewPostPage() {
             </div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <button
               type="button"
               onClick={() => handleSubmit("draft")}
               disabled={loading}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
             >
               {loading ? "שומר..." : "שמור כטיוטה"}
             </button>

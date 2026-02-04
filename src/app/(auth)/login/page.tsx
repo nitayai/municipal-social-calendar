@@ -29,15 +29,18 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/(dashboard)");
+      router.push("/dashboard");
       router.refresh();
     }
   };
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-white dark:bg-gray-900 shadow-md rounded-lg p-8">
-        <h1 className="text-2xl font-bold text-center mb-6">התחברות</h1>
+      <div className="bg-white dark:bg-[#171717] shadow-md dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-8">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold mb-1">התחברות</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">היכנס לחשבון שלך</p>
+        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -53,7 +56,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background dark:bg-[#1f1f1f] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               placeholder="your@email.com"
               dir="ltr"
             />
@@ -72,7 +75,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-md bg-background dark:bg-[#1f1f1f] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               dir="ltr"
             />
           </div>
@@ -84,7 +87,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md transition-colors"
+            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white font-medium rounded-md transition-colors"
           >
             {loading ? "מתחבר..." : "התחבר"}
           </button>
