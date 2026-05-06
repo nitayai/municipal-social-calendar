@@ -49,6 +49,26 @@ export async function getPostsByMonth(year: number, month: number): Promise<Post
   return { data, error: null };
 }
 
+export async function getPostsByDateRange(startDate: string, endDate: string): Promise<PostsResult> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .gte("scheduled_date", startDate)
+    .lte("scheduled_date", endDate)
+    .order("scheduled_date", { ascending: true })
+    .order("scheduled_time", { ascending: true })
+    .returns<Post[]>();
+
+  if (error) {
+    console.error("Error fetching posts by date range:", error);
+    return { data: null, error: error.message };
+  }
+
+  return { data, error: null };
+}
+
 export async function getPost(id: string): Promise<PostResult> {
   const supabase = await createClient();
 

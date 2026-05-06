@@ -29,7 +29,7 @@ export default async function DashboardLayout({
 
   const navLinks = [
     { href: "/posts", label: "פוסטים" },
-    { href: "/calendar", label: "לוח חודשי" },
+    { href: "/calendar", label: "גאנט פרסומים" },
     ...(isManager ? [{ href: "/settings/departments", label: "מחלקות" }] : []),
   ];
 

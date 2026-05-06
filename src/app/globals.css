@@ -31,13 +31,13 @@
   --color-border-subtle: var(--border-subtle);
   --color-text-muted: var(--text-muted);
   --color-text-subtle: var(--text-subtle);
-  --font-sans: var(--font-heebo);
+  --font-sans: var(--font-rubik);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-heebo), system-ui, sans-serif;
+  font-family: var(--font-rubik), system-ui, sans-serif;
 }
 
 /* Smooth transitions for theme changes */
@@ -49,6 +49,27 @@ html {
 .dark input[type="date"],
 .dark input[type="time"] {
   color-scheme: dark;
+}
+
+/* Dark mode: fix select elements */
+.dark select {
+  color-scheme: dark;
+}
+
+/* Dark mode: ensure backgrounds are consistent */
+.dark .bg-white {
+  background-color: var(--surface);
+}
+
+/* Dark mode: fix gray backgrounds that don't specify dark variant */
+.dark .bg-gray-50 {
+  background-color: #111111;
+}
+
+/* Dark mode body */
+html.dark body {
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 /* Better focus styles */

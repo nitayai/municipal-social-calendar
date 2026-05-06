@@ -112,6 +112,7 @@ export interface Database {
           platform: PostPlatform;
           scheduled_date: string;
           scheduled_time: string;
+          title: string | null;
           content: string;
           status: PostStatus;
           created_by: string | null;
@@ -129,6 +130,7 @@ export interface Database {
           platform: PostPlatform;
           scheduled_date: string;
           scheduled_time: string;
+          title?: string | null;
           content: string;
           status?: PostStatus;
           created_by?: string | null;
@@ -146,6 +148,7 @@ export interface Database {
           platform?: PostPlatform;
           scheduled_date?: string;
           scheduled_time?: string;
+          title?: string | null;
           content?: string;
           status?: PostStatus;
           created_by?: string | null;
