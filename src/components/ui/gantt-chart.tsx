@@ -631,7 +631,3 @@ export function GanttChart({
     </div>
   );
 }
-
-    </div>
-  );
-}
