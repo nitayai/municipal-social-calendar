@@ -85,7 +85,6 @@ export default function NewPostPage() {
   const validateAll = (): boolean => {
     const errors: FieldErrors = {};
     if (!formData.scheduled_date) errors.scheduled_date = "תאריך פרסום הוא שדה חובה";
-    if (!formData.scheduled_time) errors.scheduled_time = "שעת פרסום היא שדה חובה";
     if (selectedPlatforms.length === 0) errors.platforms = "יש לבחור לפחות פלטפורמה אחת";
     if (!formData.department_id) errors.department_id = "מחלקה היא שדה חובה";
     if (!formData.title.trim()) errors.title = "כותרת הפוסט היא שדה חובה";
@@ -105,7 +104,6 @@ export default function NewPostPage() {
   const handleSubmit = async (status: PostStatus) => {
     setTouched({
       scheduled_date: true,
-      scheduled_time: true,
       platforms: true,
       department_id: true,
       title: true,
@@ -142,7 +140,7 @@ export default function NewPostPage() {
             department_id: formData.department_id || null,
             platform,
             scheduled_date: formData.scheduled_date,
-            scheduled_time: formData.scheduled_time,
+            scheduled_time: formData.scheduled_time || "00:00",
             title: formData.title.trim() || null,
             content: formData.content,
             external_link: formData.external_link || null,
@@ -214,8 +212,8 @@ export default function NewPostPage() {
 
             <div>
               <label htmlFor="scheduled_time" className="block text-sm font-medium mb-1.5">
-                <RequiredMark />
                 שעת פרסום
+                <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-1">(אופציונלי)</span>
               </label>
               <input
                 id="scheduled_time"
@@ -438,7 +436,6 @@ export default function NewPostPage() {
   function isFormValid(): boolean {
     return !!(
       formData.scheduled_date &&
-      formData.scheduled_time &&
       selectedPlatforms.length > 0 &&
       formData.department_id &&
       formData.title.trim() &&

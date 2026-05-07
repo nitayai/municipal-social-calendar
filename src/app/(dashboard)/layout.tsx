@@ -30,7 +30,7 @@ export default async function DashboardLayout({
   const navLinks = [
     { href: "/posts", label: "פוסטים" },
     { href: "/calendar", label: "גאנט פרסומים" },
-    ...(isManager ? [{ href: "/settings/departments", label: "מחלקות" }] : []),
+    { href: "/settings/departments", label: "ניהול מחלקות" },
   ];
 
   return (
@@ -39,7 +39,7 @@ export default async function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-4 sm:gap-8">
-              <Link href="/dashboard" className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+              <Link href="/dashboard/home" className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                 מערכת עירונית
               </Link>
               {/* Desktop navigation */}

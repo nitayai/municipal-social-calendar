@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PLATFORMS } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DeletePostButton } from "@/components/ui/delete-post-button";
 import type { Post, PostPlatform, Department } from "@/types";
 
 const PLATFORM_HEADER: Record<PostPlatform, { bg: string; label: string; icon: string }> = {
@@ -36,11 +37,6 @@ function SocialPostPreview({ post }: { post: Post }) {
           <div className="text-xs text-gray-500 dark:text-gray-400">{post.department} · {post.scheduled_date} {post.scheduled_time.slice(0, 5)}</div>
         </div>
       </div>
-      {post.title && (
-        <div className="px-4 pt-3 pb-1">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{post.title}</h3>
-        </div>
-      )}
       <div className="px-4 py-3">
         <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">{post.content}</p>
       </div>

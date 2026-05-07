@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPosts, getCurrentUserRole } from "@/lib/actions/posts";
 import { getPlatformLabel } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DeletePostButton } from "@/components/ui/delete-post-button";
 
 export const dynamic = "force-dynamic";
 
@@ -53,10 +54,11 @@ export default async function PostsPage() {
           {/* Mobile card view */}
           <div className="md:hidden space-y-3">
             {posts.map((post) => (
+              <div key={post.id} className="relative bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 hover:shadow-md transition-shadow">
+                <DeletePostButton postId={post.id} className="absolute top-3 left-3 text-red-500 hover:text-red-700 dark:text-red-400 text-xs" label="✕" />
               <Link
-                key={post.id}
                 href={`/posts/${post.id}`}
-                className="block bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="block"
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2">
@@ -77,6 +79,7 @@ export default async function PostsPage() {
                   </p>
                 )}
               </Link>
+              </div>
             ))}
           </div>
 
@@ -124,20 +127,23 @@ export default async function PostsPage() {
                       <StatusBadge status={post.status} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Link
-                        href={`/posts/${post.id}`}
-                        className="text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                      >
-                        {post.status === "draft" ? "עריכה" : "צפייה"}
-                      </Link>
-                      {isManager && post.status === "pending_approval" && (
+                      <div className="flex items-center gap-4">
                         <Link
                           href={`/posts/${post.id}`}
-                          className="text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 mr-4 transition-colors"
+                          className="text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors"
                         >
-                          אישור
+                          {post.status === "draft" ? "עריכה" : "צפייה"}
                         </Link>
-                      )}
+                        {isManager && post.status === "pending_approval" && (
+                          <Link
+                            href={`/posts/${post.id}`}
+                            className="text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 transition-colors"
+                          >
+                            אישור
+                          </Link>
+                        )}
+                        <DeletePostButton postId={post.id} />
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStatusInfo, PLATFORMS } from "@/lib/constants";
+import { getHebrewDateInfo } from "@/lib/hebrew-calendar";
+import { getSpecialDay } from "@/lib/special-days";
 import type { Post, PostPlatform, PostStatus } from "@/types";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -171,17 +173,32 @@ function WeeklyGanttFull({
           </div>
           {weekDays.map((day, i) => {
             const isToday = dayDateStrs[i] === todayStr;
+            const hebrewInfo = getHebrewDateInfo(day);
+            const specialDay = getSpecialDay(dayDateStrs[i]);
+            const holiday = hebrewInfo.holiday || specialDay;
+            const isShabbat = hebrewInfo.isShabbat;
             return (
               <div
                 key={i}
-                className={`px-2 py-3 text-center border-l border-gray-200 dark:border-[#2a2a2a] ${isToday ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                className={`px-1 py-2 text-center border-l border-gray-200 dark:border-[#2a2a2a] ${
+                  isToday ? "bg-blue-50 dark:bg-blue-900/20" :
+                  isShabbat ? "bg-purple-50/40 dark:bg-purple-900/10" : ""
+                }`}
               >
-                <div className={`text-[11px] font-medium ${isToday ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>
+                <div className={`text-[11px] font-medium ${isToday ? "text-blue-600 dark:text-blue-400" : isShabbat ? "text-purple-600 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"}`}>
                   {DAYS_OF_WEEK[day.getDay()]}
                 </div>
-                <div className={`text-sm font-bold mt-0.5 ${isToday ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-200"}`}>
+                <div className={`text-sm font-bold mt-0.5 ${isToday ? "text-blue-600 dark:text-blue-400" : isShabbat ? "text-purple-600 dark:text-purple-400" : "text-gray-700 dark:text-gray-200"}`}>
                   {day.getDate()}/{day.getMonth() + 1}
                 </div>
+                <div className="text-[9px] text-amber-600 dark:text-amber-400 mt-0.5 leading-tight truncate px-0.5" title={hebrewInfo.display}>
+                  {hebrewInfo.display}
+                </div>
+                {holiday && (
+                  <div className="text-[9px] text-red-600 dark:text-red-400 mt-0.5 leading-tight truncate px-0.5" title={holiday}>
+                    {holiday}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -397,6 +414,10 @@ function MonthlyGantt({
           const dateStr = formatDateStr(date);
           const isToday = dateStr === todayStr;
           const dayPosts = isCurrentMonth ? (postsByDate.get(dateStr) ?? []) : [];
+          const hebrewInfo = isCurrentMonth ? getHebrewDateInfo(date) : null;
+          const specialDay = isCurrentMonth ? getSpecialDay(dateStr) : null;
+          const holiday = hebrewInfo?.holiday || specialDay;
+          const isShabbat = date.getDay() === 6;
           return (
             <button
               key={idx}
@@ -405,14 +426,26 @@ function MonthlyGantt({
               disabled={!isCurrentMonth}
               className={`
                 min-h-[90px] border border-gray-100 dark:border-[#222] p-1.5 text-right align-top transition-colors
-                ${!isCurrentMonth ? "opacity-30 cursor-default bg-gray-50 dark:bg-[#111]" : "hover:bg-blue-50/30 dark:hover:bg-blue-900/10 cursor-pointer"}
+                ${!isCurrentMonth ? "opacity-30 cursor-default bg-gray-50 dark:bg-[#111]" :
+                  isShabbat ? "bg-purple-50/30 dark:bg-purple-900/10 hover:bg-purple-50/60 dark:hover:bg-purple-900/20 cursor-pointer" :
+                  "hover:bg-blue-50/30 dark:hover:bg-blue-900/10 cursor-pointer"}
                 ${isToday ? "ring-2 ring-blue-500 ring-inset" : ""}
               `}
             >
               <div className="flex flex-col gap-0.5 h-full">
-                <span className={`text-xs font-semibold inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${isToday ? "bg-blue-600 text-white" : "text-gray-700 dark:text-gray-300"}`}>
+                <span className={`text-xs font-semibold inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${isToday ? "bg-blue-600 text-white" : isShabbat ? "text-purple-600 dark:text-purple-400" : "text-gray-700 dark:text-gray-300"}`}>
                   {date.getDate()}
                 </span>
+                {hebrewInfo && (
+                  <span className="text-[8px] text-amber-600 dark:text-amber-400 leading-tight truncate">
+                    {hebrewInfo.display}
+                  </span>
+                )}
+                {holiday && (
+                  <span className="text-[8px] text-red-600 dark:text-red-400 leading-tight truncate" title={holiday}>
+                    {holiday}
+                  </span>
+                )}
                 {dayPosts.slice(0, 3).map((post) => (
                   <PostTitleChip key={post.id} post={post} compact />
                 ))}
@@ -631,3 +664,4 @@ export function GanttChart({
     </div>
   );
 }
+
