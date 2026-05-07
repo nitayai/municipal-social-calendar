@@ -118,7 +118,7 @@ export async function createPost(post: Omit<PostInsert, "created_by">): Promise<
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/(dashboard)/posts");
+  revalidatePath("/posts");
   return { data, error: null };
 }
 
@@ -137,8 +137,8 @@ export async function updatePost(id: string, updates: PostUpdate): Promise<PostR
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/(dashboard)/posts");
-  revalidatePath(`/(dashboard)/posts/${id}`);
+  revalidatePath("/posts");
+  revalidatePath(`/posts/${id}`);
   return { data, error: null };
 }
 
@@ -155,7 +155,7 @@ export async function deletePost(id: string): Promise<{ error: string | null }> 
     return { error: error.message };
   }
 
-  revalidatePath("/(dashboard)/posts");
+  revalidatePath("/posts");
   return { error: null };
 }
 

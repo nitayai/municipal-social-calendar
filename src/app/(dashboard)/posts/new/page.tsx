@@ -10,6 +10,8 @@ const PLATFORM_COLORS: Record<PostPlatform, string> = {
   instagram: "border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300",
   tiktok: "border-gray-400 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300",
   whatsapp: "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20 text-green-700 dark:text-green-300",
+  story: "border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300",
+  reels: "border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300",
 };
 
 const PLATFORM_SELECTED_COLORS: Record<PostPlatform, string> = {
@@ -17,6 +19,8 @@ const PLATFORM_SELECTED_COLORS: Record<PostPlatform, string> = {
   instagram: "border-pink-500 bg-pink-100 dark:border-pink-400 dark:bg-pink-800/40 text-pink-800 dark:text-pink-200 ring-2 ring-pink-400 dark:ring-pink-600",
   tiktok: "border-gray-600 bg-gray-100 dark:border-gray-400 dark:bg-gray-700/60 text-gray-900 dark:text-gray-100 ring-2 ring-gray-400 dark:ring-gray-500",
   whatsapp: "border-green-500 bg-green-100 dark:border-green-400 dark:bg-green-800/40 text-green-800 dark:text-green-200 ring-2 ring-green-400 dark:ring-green-600",
+  story: "border-yellow-500 bg-yellow-100 dark:border-yellow-400 dark:bg-yellow-800/40 text-yellow-800 dark:text-yellow-200 ring-2 ring-yellow-400 dark:ring-yellow-600",
+  reels: "border-purple-500 bg-purple-100 dark:border-purple-400 dark:bg-purple-800/40 text-purple-800 dark:text-purple-200 ring-2 ring-purple-400 dark:ring-purple-600",
 };
 
 interface FieldErrors {

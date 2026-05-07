@@ -13,6 +13,8 @@ const PLATFORM_HEADER: Record<PostPlatform, { bg: string; label: string; icon: s
   instagram: { bg: "bg-gradient-to-r from-pink-500 to-purple-600", label: "Instagram", icon: "ig" },
   tiktok: { bg: "bg-gray-900", label: "TikTok", icon: "tk" },
   whatsapp: { bg: "bg-green-500", label: "WhatsApp", icon: "wa" },
+  story: { bg: "bg-gradient-to-r from-yellow-400 to-pink-500", label: "Story", icon: "st" },
+  reels: { bg: "bg-gradient-to-r from-purple-600 to-pink-600", label: "Reels", icon: "rl" },
 };
 
 function SocialPostPreview({ post }: { post: Post }) {

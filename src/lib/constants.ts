@@ -5,6 +5,8 @@ export const PLATFORMS: { value: PostPlatform; label: string }[] = [
   { value: "instagram", label: "Instagram" },
   { value: "tiktok", label: "TikTok" },
   { value: "whatsapp", label: "WhatsApp" },
+  { value: "story", label: "Story" },
+  { value: "reels", label: "Reels" },
 ];
 
 export const POST_STATUSES: { value: PostStatus; label: string; color: string }[] = [

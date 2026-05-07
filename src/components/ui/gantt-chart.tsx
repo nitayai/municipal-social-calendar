@@ -41,6 +41,18 @@ const PLATFORM_STYLE: Record<PostPlatform, { header: string; chip: string; chipS
     chipSelected: "ring-2 ring-green-400",
     dot: "bg-green-500",
   },
+  story: {
+    header: "bg-gradient-to-r from-yellow-400 to-pink-500 text-white",
+    chip: "bg-yellow-50 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-200 dark:border-yellow-700",
+    chipSelected: "ring-2 ring-yellow-400",
+    dot: "bg-yellow-500",
+  },
+  reels: {
+    header: "bg-gradient-to-r from-purple-600 to-pink-600 text-white",
+    chip: "bg-purple-50 text-purple-800 border border-purple-200 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700",
+    chipSelected: "ring-2 ring-purple-400",
+    dot: "bg-purple-600",
+  },
 };
 
 const STATUS_DOT: Record<PostStatus, string> = {
@@ -118,9 +130,9 @@ function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolea
       title={`${displayTitle} — ${statusInfo.label} — ${post.scheduled_time.slice(0, 5)}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[post.status] ?? "bg-gray-400"}`} />
-      <span className="truncate flex-1">{displayTitle}</span>
+      <span className="truncate min-w-0 flex-1">{displayTitle}</span>
       {!compact && (
-        <span className="text-[10px] opacity-60 shrink-0">{post.scheduled_time.slice(0, 5)}</span>
+        <span className="text-[10px] opacity-60 shrink-0 tabular-nums">{post.scheduled_time.slice(0, 5)}</span>
       )}
     </Link>
   );
@@ -165,9 +177,9 @@ function WeeklyGanttFull({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-[#2a2a2a]">
-      <div className="min-w-[660px]">
+      <div className="min-w-[900px]">
         {/* Column headers */}
-        <div className="grid grid-cols-[120px_repeat(7,1fr)] bg-gray-50 dark:bg-[#131313] border-b border-gray-200 dark:border-[#2a2a2a]">
+        <div className="grid grid-cols-[110px_repeat(7,minmax(110px,1fr))] bg-gray-50 dark:bg-[#131313] border-b border-gray-200 dark:border-[#2a2a2a]">
           <div className="px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 border-l border-gray-200 dark:border-[#2a2a2a]">
             פלטפורמה
           </div>
@@ -213,7 +225,7 @@ function WeeklyGanttFull({
           return (
             <div
               key={platform.value}
-              className={`grid grid-cols-[120px_repeat(7,1fr)] ${!isLast ? "border-b border-gray-200 dark:border-[#2a2a2a]" : ""}`}
+              className={`grid grid-cols-[110px_repeat(7,minmax(110px,1fr))] ${!isLast ? "border-b border-gray-200 dark:border-[#2a2a2a]" : ""}`}
             >
               {/* Platform label */}
               <div className={`flex items-center gap-2 px-3 py-2 border-l border-gray-200 dark:border-[#2a2a2a] bg-gray-50/60 dark:bg-[#161616]`}>
@@ -236,7 +248,7 @@ function WeeklyGanttFull({
                     onClick={() => handleCellClick(dateStr, platform.value)}
                     className={`
                       min-h-[72px] px-1.5 py-1.5 border-l border-gray-200 dark:border-[#2a2a2a]
-                      flex flex-col gap-1 items-stretch text-right
+                      flex flex-col gap-1 items-stretch text-right overflow-hidden
                       transition-colors cursor-pointer
                       ${isToday ? "bg-blue-50/40 dark:bg-blue-900/10" : "hover:bg-gray-50 dark:hover:bg-[#1a1a1a]"}
                     `}
@@ -257,7 +269,7 @@ function WeeklyGanttFull({
         })}
 
         {/* Footer — add buttons per day */}
-        <div className="grid grid-cols-[120px_repeat(7,1fr)] bg-gray-50/30 dark:bg-[#111] border-t border-gray-200 dark:border-[#2a2a2a]">
+        <div className="grid grid-cols-[110px_repeat(7,minmax(110px,1fr))] bg-gray-50/30 dark:bg-[#111] border-t border-gray-200 dark:border-[#2a2a2a]">
           <div className="border-l border-gray-200 dark:border-[#2a2a2a] px-3 py-2 text-[10px] text-gray-400">
             הוסף פוסט
           </div>
