@@ -119,6 +119,8 @@ export interface Database {
           approval_comment: string | null;
           external_link: string | null;
           attachment_url: string | null;
+          is_scheduled: boolean;
+          platform_scheduled_time: string | null;
           created_at: string;
           updated_at: string;
         };

@@ -145,17 +145,42 @@ export async function updatePost(id: string, updates: PostUpdate): Promise<PostR
 export async function deletePost(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
     console.error("Error deleting post:", error);
     return { error: error.message };
   }
 
+  if (!data || data.length === 0) {
+    return { error: "אין הרשאה למחוק פוסט זה" };
+  }
+
   revalidatePath("/posts");
+  return { error: null };
+}
+
+export async function revertToDraft(id: string): Promise<PostResult> {
+  return updatePost(id, { status: "draft" });
+}
+
+export async function updateScheduled(
+  id: string,
+  isScheduled: boolean,
+  platformScheduledTime: string | null
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("posts")
+    .update({ is_scheduled: isScheduled, platform_scheduled_time: platformScheduledTime } as never)
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/posts");
+  revalidatePath(`/posts/${id}`);
   return { error: null };
 }
 

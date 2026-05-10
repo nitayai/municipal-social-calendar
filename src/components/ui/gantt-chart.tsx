@@ -127,10 +127,13 @@ function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolea
         hover:opacity-80 transition-opacity cursor-pointer select-none
         ${style.chip}
       `}
-      title={`${displayTitle} — ${statusInfo.label} — ${post.scheduled_time.slice(0, 5)}`}
+      title={`${displayTitle} — ${statusInfo.label} — ${post.scheduled_time.slice(0, 5)}${post.is_scheduled ? " · מתוזמן" : ""}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[post.status] ?? "bg-gray-400"}`} />
       <span className="truncate min-w-0 flex-1">{displayTitle}</span>
+      {post.is_scheduled && (
+        <span className="text-[9px] shrink-0" title={post.platform_scheduled_time ? `מתוזמן ל-${post.platform_scheduled_time}` : "מתוזמן"}>🕐</span>
+      )}
       {!compact && (
         <span className="text-[10px] opacity-60 shrink-0 tabular-nums">{post.scheduled_time.slice(0, 5)}</span>
       )}
@@ -580,7 +583,7 @@ export function GanttChart({
               onClick={goToPrev}
               className="px-2.5 py-1.5 text-sm border border-gray-300 dark:border-[#2a2a2a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
             >
-              &larr;
+              &rarr;
             </button>
             <button
               onClick={goToToday}
@@ -592,7 +595,7 @@ export function GanttChart({
               onClick={goToNext}
               className="px-2.5 py-1.5 text-sm border border-gray-300 dark:border-[#2a2a2a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
             >
-              &rarr;
+              &larr;
             </button>
           </div>
 

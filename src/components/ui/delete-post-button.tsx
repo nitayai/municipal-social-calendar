@@ -33,7 +33,7 @@ export function DeletePostButton({
       if (redirectAfter) {
         router.push(redirectAfter);
       } else {
-        router.refresh();
+        router.push("/posts");
       }
     } catch {
       alert("שגיאה במחיקת הפוסט");

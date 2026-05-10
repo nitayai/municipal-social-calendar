@@ -56,29 +56,30 @@ export default async function PostsPage() {
             {posts.map((post) => (
               <div key={post.id} className="relative bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg p-4 hover:shadow-md transition-shadow">
                 <DeletePostButton postId={post.id} className="absolute top-3 left-3 text-red-500 hover:text-red-700 dark:text-red-400 text-xs" label="✕" />
-              <Link
-                href={`/posts/${post.id}`}
-                className="block"
-              >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{getPlatformLabel(post.platform)}</span>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{post.department}</span>
+                <Link href={`/posts/${post.id}`} className="block">
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{getPlatformLabel(post.platform)}</span>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{post.department}</span>
+                    </div>
+                    <StatusBadge status={post.status} />
                   </div>
-                  <StatusBadge status={post.status} />
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                  <span>{new Date(post.scheduled_date).toLocaleDateString("he-IL")}</span>
-                  <span className="text-gray-300 dark:text-gray-600">|</span>
-                  <span dir="ltr">{post.scheduled_time.slice(0, 5)}</span>
-                </div>
-                {post.content && (
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {post.content}
-                  </p>
-                )}
-              </Link>
+                  {post.title && (
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1 truncate">{post.title}</p>
+                  )}
+                  <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                    <span>{new Date(post.scheduled_date).toLocaleDateString("he-IL")}</span>
+                    <span className="text-gray-300 dark:text-gray-600">|</span>
+                    <span dir="ltr">{post.scheduled_time.slice(0, 5)}</span>
+                    {post.is_scheduled && <span className="text-emerald-600 dark:text-emerald-400 text-xs">🕐 מתוזמן</span>}
+                  </div>
+                  {post.content && (
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                      {post.content}
+                    </p>
+                  )}
+                </Link>
               </div>
             ))}
           </div>
@@ -88,24 +89,13 @@ export default async function PostsPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    תאריך
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    שעה
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    פלטפורמה
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    מחלקה
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    סטטוס
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    פעולות
-                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">תאריך</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">שעה</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">פלטפורמה</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">מחלקה</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">כותרת</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">סטטוס</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">פעולות</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -123,8 +113,16 @@ export default async function PostsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {post.department}
                     </td>
+                    <td className="px-6 py-4 text-sm max-w-[200px]">
+                      <span className="truncate block text-gray-700 dark:text-gray-300">
+                        {post.title || <span className="text-gray-400 dark:text-gray-600 italic text-xs">ללא כותרת</span>}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={post.status} />
+                      <div className="flex items-center gap-1.5">
+                        <StatusBadge status={post.status} />
+                        {post.is_scheduled && <span className="text-xs text-emerald-600 dark:text-emerald-400" title="מתוזמן בפלטפורמה">🕐</span>}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-4">

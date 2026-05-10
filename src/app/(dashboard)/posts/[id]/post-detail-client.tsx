@@ -44,20 +44,30 @@ function SocialPostPreview({ post }: { post: Post }) {
       </div>
       {post.external_link && (
         <div className="mx-4 mb-3 border border-gray-200 dark:border-[#2a2a2a] rounded-lg overflow-hidden">
-          <div className="px-3 py-2.5 bg-gray-50 dark:bg-[#222] flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-500 shrink-0">
+          <a href={post.external_link} target="_blank" rel="noopener noreferrer" className="block px-3 py-2.5 bg-gray-50 dark:bg-[#222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-blue-500 shrink-0">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
             </svg>
-            <a href={post.external_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate">{post.external_link}</a>
-          </div>
+            <span className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate flex-1">{post.external_link}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 text-gray-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
         </div>
       )}
       {post.attachment_url && (
         <div className="border-t border-gray-100 dark:border-[#222]">
           {isImage ? (
-            <img src={post.attachment_url} alt="קובץ מצורף" className="w-full max-h-80 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="block group">
+              <div className="relative">
+                <img src={post.attachment_url} alt="קובץ מצורף" className="w-full max-h-80 object-cover group-hover:opacity-90 transition-opacity" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="bg-black/50 text-white text-xs px-2 py-1 rounded">פתח בחלון חדש</span>
+                </div>
+              </div>
+            </a>
           ) : isPdf ? (
-            <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10">
+            <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors">
               <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-red-600 dark:text-red-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -65,11 +75,14 @@ function SocialPostPreview({ post }: { post: Post }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-red-700 dark:text-red-300">מסמך PDF מצורף</p>
-                <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-red-600 dark:text-red-400 hover:underline">לחץ לצפייה</a>
+                <p className="text-xs text-red-500 dark:text-red-400">לחץ לפתיחה בחלון חדש</p>
               </div>
-            </div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-red-400 mr-auto">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </a>
           ) : (
-            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-[#1f1f1f]">
+            <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-[#1f1f1f] hover:bg-gray-100 dark:hover:bg-[#252525] transition-colors">
               <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-600 dark:text-gray-300">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
@@ -77,9 +90,12 @@ function SocialPostPreview({ post }: { post: Post }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">קובץ מצורף</p>
-                <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">לחץ להורדה</a>
+                <p className="text-xs text-blue-600 dark:text-blue-400">לחץ לפתיחה בחלון חדש</p>
               </div>
-            </div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-400 mr-auto">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </a>
           )}
         </div>
       )}
@@ -119,6 +135,10 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [approvalComment, setApprovalComment] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [scheduledChecked, setScheduledChecked] = useState(post.is_scheduled ?? false);
+  const [scheduledTime, setScheduledTime] = useState(post.platform_scheduled_time ?? "");
+  const [savingScheduled, setSavingScheduled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -128,6 +148,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
 
   const canEdit = post.status === "draft" || (isManager && post.status === "pending_approval");
   const canApprove = isManager && post.status === "pending_approval";
+  const isApproved = post.status === "approved" || post.status === "published";
 
   const [formData, setFormData] = useState({
     department_id: post.department_id || "",
@@ -280,15 +301,50 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
     } catch { setError("שגיאה בדחיית הפוסט"); setLoading(false); }
   };
 
-  const handleDelete = async () => {
-    if (!confirm("האם למחוק את הפוסט?")) return;
+  const handleRevertToDraft = async () => {
+    if (!confirm("להחזיר את הפוסט לטיוטה לצורך עריכה?")) return;
     setLoading(true);
+    setError(null);
     try {
-      const { deletePost } = await import("@/lib/actions/posts");
-      const { error } = await deletePost(post.id);
+      const { revertToDraft } = await import("@/lib/actions/posts");
+      const { error } = await revertToDraft(post.id);
       if (error) { setError(error); setLoading(false); }
-      else router.push("/posts");
-    } catch { setError("שגיאה במחיקת הפוסט"); setLoading(false); }
+      else { router.refresh(); }
+    } catch { setError("שגיאה בהחזרת הפוסט לטיוטה"); setLoading(false); }
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(post.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert("שגיאה בהעתקה");
+    }
+  };
+
+  const handleScheduledChange = async (checked: boolean) => {
+    setScheduledChecked(checked);
+    if (!checked) {
+      setSavingScheduled(true);
+      try {
+        const { updateScheduled } = await import("@/lib/actions/posts");
+        await updateScheduled(post.id, false, null);
+        setScheduledTime("");
+      } finally {
+        setSavingScheduled(false);
+      }
+    }
+  };
+
+  const handleScheduledTimeSave = async () => {
+    setSavingScheduled(true);
+    try {
+      const { updateScheduled } = await import("@/lib/actions/posts");
+      await updateScheduled(post.id, true, scheduledTime || null);
+    } finally {
+      setSavingScheduled(false);
+    }
   };
 
   const RequiredMark = () => <span className="text-red-500 mr-1">*</span>;
@@ -316,11 +372,51 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
             {canApprove ? "בדיקה ואישור פוסט" : canEdit ? "עריכת פוסט" : "צפייה בפוסט"}
           </h2>
         </div>
-        <StatusBadge status={post.status} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <StatusBadge status={post.status} />
+          {/* Copy button — always visible */}
+          <button
+            type="button"
+            onClick={handleCopyText}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+            title="העתק טקסט הפוסט"
+          >
+            {copied ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-emerald-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+                <span className="text-emerald-600 dark:text-emerald-400">הועתק!</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                </svg>
+                <span>העתק</span>
+              </>
+            )}
+          </button>
+          {/* Edit button for approved posts */}
+          {isApproved && (
+            <button
+              type="button"
+              onClick={handleRevertToDraft}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 transition-colors disabled:opacity-50"
+              title="החזר לטיוטה לצורך עריכה"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+              </svg>
+              <span>עריכה מחדש</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={`flex flex-col ${canApprove || post.status !== "draft" ? "lg:flex-row" : ""} gap-6`}>
-        {/* Edit form */}
+        {/* Edit / view form */}
         <div className={`${canApprove || post.status !== "draft" ? "lg:w-1/2" : "max-w-2xl"} bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-xl p-4 sm:p-6`}>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -367,7 +463,12 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
               {canEdit ? (
                 <input id="external_link" type="url" value={formData.external_link} onChange={(e) => setFormData({ ...formData, external_link: e.target.value })} className={fieldClass("external_link")} placeholder="https://example.com" dir="ltr" />
               ) : post.external_link ? (
-                <a href={post.external_link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">פתח קישור</a>
+                <a href={post.external_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  פתח קישור
+                </a>
               ) : <p className="text-sm text-gray-400">לא הוגדר קישור</p>}
             </div>
             <div>
@@ -375,11 +476,61 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
               {canEdit ? (
                 <>
                   <input ref={fileInputRef} type="file" onChange={handleFileChange} accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx" className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-sm text-gray-500 dark:text-gray-400 file:ml-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <p className="mt-1 text-xs text-gray-400">תמונות (JPG, PNG, GIF, WebP), PDF, מסמכי Word</p>
                   {selectedFile && <p className="mt-1 text-xs text-gray-500">קובץ חדש: {selectedFile.name}</p>}
                   {post.attachment_url && !selectedFile && <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">קובץ קיים מצורף</p>}
                 </>
-              ) : !post.attachment_url ? <p className="text-sm text-gray-400">לא צורף קובץ</p> : null}
+              ) : post.attachment_url ? (
+                <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  פתח קובץ מצורף
+                </a>
+              ) : <p className="text-sm text-gray-400">לא צורף קובץ</p>}
             </div>
+
+            {/* Scheduling checkbox — visible for approved/published posts */}
+            {isApproved && (
+              <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="is_scheduled"
+                    checked={scheduledChecked}
+                    onChange={(e) => handleScheduledChange(e.target.checked)}
+                    disabled={savingScheduled}
+                    className="w-4 h-4 accent-emerald-600"
+                  />
+                  <label htmlFor="is_scheduled" className="text-sm font-medium text-emerald-800 dark:text-emerald-300 cursor-pointer select-none">
+                    הפוסט תוזמן בפלטפורמה
+                  </label>
+                  {savingScheduled && <span className="text-xs text-gray-400">שומר...</span>}
+                </div>
+                {scheduledChecked && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <label className="text-xs text-emerald-700 dark:text-emerald-400 shrink-0">שעת תזמון:</label>
+                    <input
+                      type="time"
+                      value={scheduledTime}
+                      onChange={(e) => setScheduledTime(e.target.value)}
+                      onBlur={handleScheduledTimeSave}
+                      className="px-2 py-1 text-sm border border-emerald-300 dark:border-emerald-700 rounded-md bg-white dark:bg-[#1f1f1f] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      dir="ltr"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleScheduledTimeSave}
+                      disabled={savingScheduled}
+                      className="px-2 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-md disabled:opacity-50"
+                    >
+                      {savingScheduled ? "..." : "שמור"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {post.approval_comment && (
               <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg">
                 <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">הערת מנהל:</p>
@@ -398,7 +549,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
                 <>
                   <button type="button" onClick={() => handleSave(false)} disabled={loading} className="px-4 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-200 disabled:opacity-50">{loading ? "שומר..." : "שמור"}</button>
                   {post.status === "draft" && <button type="button" onClick={() => handleSave(true)} disabled={loading || !isFormValid()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">{loading ? "שולח..." : "שלח לאישור"}</button>}
-                  <button type="button" onClick={handleDelete} disabled={loading} className="px-4 py-2 text-red-600 hover:text-red-700 text-sm disabled:opacity-50">מחק</button>
+                  <DeletePostButton postId={post.id} redirectAfter="/posts" className="px-4 py-2 text-red-600 hover:text-red-700 text-sm disabled:opacity-50" label="מחק" />
                 </>
               )}
               {canApprove && (
