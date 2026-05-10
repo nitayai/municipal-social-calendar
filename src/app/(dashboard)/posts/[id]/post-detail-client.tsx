@@ -222,10 +222,8 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
 
   const getAttachmentUrl = async (): Promise<string | null | undefined> => {
     if (!selectedFile) return post.attachment_url;
-    const { uploadAttachment } = await import("@/lib/actions/posts");
-    const fd = new FormData();
-    fd.append("file", selectedFile);
-    const result = await uploadAttachment(fd);
+    const { uploadFileToStorage } = await import("@/lib/upload");
+    const result = await uploadFileToStorage(selectedFile);
     if (result.error) { setError(result.error); return undefined; }
     return result.url;
   };

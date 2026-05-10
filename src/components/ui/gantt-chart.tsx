@@ -132,7 +132,12 @@ function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolea
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[post.status] ?? "bg-gray-400"}`} />
       <span className="truncate min-w-0 flex-1">{displayTitle}</span>
       {post.is_scheduled && (
-        <span className="text-[9px] shrink-0" title={post.platform_scheduled_time ? `מתוזמן ל-${post.platform_scheduled_time}` : "מתוזמן"}>🕐</span>
+        <span className="flex items-center gap-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" title={post.platform_scheduled_time ? `מתוזמן ל-${post.platform_scheduled_time}` : "מתוזמן"}>
+          <span className="text-[9px]">🕐</span>
+          {post.platform_scheduled_time && (
+            <span className="text-[9px] tabular-nums">{post.platform_scheduled_time.slice(0,5)}</span>
+          )}
+        </span>
       )}
       {!compact && (
         <span className="text-[10px] opacity-60 shrink-0 tabular-nums">{post.scheduled_time.slice(0, 5)}</span>

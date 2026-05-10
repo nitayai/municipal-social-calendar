@@ -122,10 +122,8 @@ export default function NewPostPage() {
     try {
       let attachmentUrl: string | null = null;
       if (selectedFile) {
-        const { uploadAttachment } = await import("@/lib/actions/posts");
-        const fileFormData = new FormData();
-        fileFormData.append("file", selectedFile);
-        const uploadResult = await uploadAttachment(fileFormData);
+        const { uploadFileToStorage } = await import("@/lib/upload");
+        const uploadResult = await uploadFileToStorage(selectedFile);
         if (uploadResult.error) {
           setError(uploadResult.error);
           setLoading(false);
