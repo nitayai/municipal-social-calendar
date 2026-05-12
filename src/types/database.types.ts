@@ -18,7 +18,7 @@ export type Json =
 
 export type UserRole = "user" | "manager" | "super_admin";
 
-export type PostPlatform = "facebook" | "instagram" | "tiktok" | "whatsapp" | "story" | "reels";
+export type PostPlatform = "facebook" | "instagram" | "tiktok" | "whatsapp" | "story" | "reels" | "digital_signage";
 
 export type PostStatus = "draft" | "pending_approval" | "rejected" | "approved" | "published";
 

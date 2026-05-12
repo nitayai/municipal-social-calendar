@@ -7,6 +7,7 @@ export const PLATFORMS: { value: PostPlatform; label: string }[] = [
   { value: "whatsapp", label: "WhatsApp" },
   { value: "story", label: "Story" },
   { value: "reels", label: "Reels" },
+  { value: "digital_signage", label: "שילוט דיגיטלי" },
 ];
 
 export const POST_STATUSES: { value: PostStatus; label: string; color: string }[] = [

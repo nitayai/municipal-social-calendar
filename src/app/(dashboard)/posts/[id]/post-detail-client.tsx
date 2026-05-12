@@ -15,6 +15,7 @@ const PLATFORM_HEADER: Record<PostPlatform, { bg: string; label: string; icon: s
   whatsapp: { bg: "bg-green-500", label: "WhatsApp", icon: "wa" },
   story: { bg: "bg-gradient-to-r from-yellow-400 to-pink-500", label: "Story", icon: "st" },
   reels: { bg: "bg-gradient-to-r from-purple-600 to-pink-600", label: "Reels", icon: "rl" },
+  digital_signage: { bg: "bg-gradient-to-r from-cyan-600 to-teal-600", label: "שילוט דיגיטלי", icon: "ds" },
 };
 
 function SocialPostPreview({ post }: { post: Post }) {
@@ -254,7 +255,7 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
         status: newStatus,
       });
       if (error) { setError(error); setLoading(false); }
-      else { router.push("/posts"); router.refresh(); }
+      else { router.push("/calendar"); }
     } catch { setError("שגיאה בעדכון הפוסט"); setLoading(false); }
   };
 
@@ -459,7 +460,16 @@ export function PostDetailClient({ post, isManager }: PostDetailClientProps) {
             <div>
               <label htmlFor="external_link" className="block text-sm font-medium mb-1.5">קישור חיצוני <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-1">(אופציונלי)</span></label>
               {canEdit ? (
-                <input id="external_link" type="url" value={formData.external_link} onChange={(e) => setFormData({ ...formData, external_link: e.target.value })} className={fieldClass("external_link")} placeholder="https://example.com" dir="ltr" />
+                <div className="flex items-center gap-2">
+                  <input id="external_link" type="url" value={formData.external_link} onChange={(e) => setFormData({ ...formData, external_link: e.target.value })} className={`${fieldClass("external_link")} flex-1`} placeholder="https://example.com" dir="ltr" />
+                  {formData.external_link && (
+                    <a href={formData.external_link} target="_blank" rel="noopener noreferrer" className="shrink-0 p-2 rounded-lg border border-gray-300 dark:border-[#3a3a3a] bg-white dark:bg-[#1f1f1f] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="פתח קישור">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
               ) : post.external_link ? (
                 <a href={post.external_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">

@@ -53,6 +53,12 @@ const PLATFORM_STYLE: Record<PostPlatform, { header: string; chip: string; chipS
     chipSelected: "ring-2 ring-purple-400",
     dot: "bg-purple-600",
   },
+  digital_signage: {
+    header: "bg-gradient-to-r from-cyan-600 to-teal-600 text-white",
+    chip: "bg-cyan-50 text-cyan-800 border border-cyan-200 dark:bg-cyan-900/40 dark:text-cyan-200 dark:border-cyan-700",
+    chipSelected: "ring-2 ring-cyan-400",
+    dot: "bg-cyan-600",
+  },
 };
 
 const STATUS_DOT: Record<PostStatus, string> = {
@@ -116,7 +122,7 @@ function buildMonthGrid(year: number, month: number): { date: Date; isCurrentMon
 function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolean }) {
   const statusInfo = getStatusInfo(post.status);
   const style = PLATFORM_STYLE[post.platform];
-  const displayTitle = post.title || post.content.slice(0, 20) + (post.content.length > 20 ? "..." : "");
+  const displayTitle = post.title || post.content.slice(0, 35) + (post.content.length > 35 ? "..." : "");
 
   return (
     <Link
@@ -130,7 +136,7 @@ function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolea
       title={`${displayTitle} — ${statusInfo.label} — ${post.scheduled_time.slice(0, 5)}${post.is_scheduled ? " · מתוזמן" : ""}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[post.status] ?? "bg-gray-400"}`} />
-      <span className="truncate min-w-0 flex-1">{displayTitle}</span>
+      <span className="line-clamp-2 min-w-0 flex-1 leading-tight">{displayTitle}</span>
       {post.is_scheduled && (
         <span className="flex items-center gap-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" title={post.platform_scheduled_time ? `מתוזמן ל-${post.platform_scheduled_time}` : "מתוזמן"}>
           <span className="text-[9px]">🕐</span>

@@ -12,6 +12,7 @@ const PLATFORM_COLORS: Record<PostPlatform, string> = {
   whatsapp: "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20 text-green-700 dark:text-green-300",
   story: "border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300",
   reels: "border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300",
+  digital_signage: "border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300",
 };
 
 const PLATFORM_SELECTED_COLORS: Record<PostPlatform, string> = {
@@ -21,6 +22,7 @@ const PLATFORM_SELECTED_COLORS: Record<PostPlatform, string> = {
   whatsapp: "border-green-500 bg-green-100 dark:border-green-400 dark:bg-green-800/40 text-green-800 dark:text-green-200 ring-2 ring-green-400 dark:ring-green-600",
   story: "border-yellow-500 bg-yellow-100 dark:border-yellow-400 dark:bg-yellow-800/40 text-yellow-800 dark:text-yellow-200 ring-2 ring-yellow-400 dark:ring-yellow-600",
   reels: "border-purple-500 bg-purple-100 dark:border-purple-400 dark:bg-purple-800/40 text-purple-800 dark:text-purple-200 ring-2 ring-purple-400 dark:ring-purple-600",
+  digital_signage: "border-cyan-500 bg-cyan-100 dark:border-cyan-400 dark:bg-cyan-800/40 text-cyan-800 dark:text-cyan-200 ring-2 ring-cyan-400 dark:ring-cyan-600",
 };
 
 interface FieldErrors {
