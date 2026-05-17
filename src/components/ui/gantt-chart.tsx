@@ -119,9 +119,10 @@ function buildMonthGrid(year: number, month: number): { date: Date; isCurrentMon
 
 // ─── Post Title Chip ──────────────────────────────────────────────────────────
 
-function PostTitleChip({ post, compact = false }: { post: Post; compact?: boolean }) {
+function PostTitleChip({ post, compact = false, platformContext }: { post: Post; compact?: boolean; platformContext?: PostPlatform }) {
   const statusInfo = getStatusInfo(post.status);
-  const style = PLATFORM_STYLE[post.platform];
+  const plt = platformContext ?? post.platforms?.[0] ?? "facebook";
+  const style = PLATFORM_STYLE[plt] ?? PLATFORM_STYLE.facebook;
   const displayTitle = post.title || post.content.slice(0, 35) + (post.content.length > 35 ? "..." : "");
 
   return (
@@ -166,17 +167,20 @@ function WeeklyGanttFull({
   const router = useRouter();
   const dayDateStrs = weekDays.map(formatDateStr);
 
-  // Group posts by platform then by date
+  // Group posts by platform then by date (a post can appear in multiple platform rows)
   const postsByPlatformAndDate = useMemo(() => {
     const map = new Map<PostPlatform, Map<string, Post[]>>();
     for (const platform of PLATFORMS) {
       map.set(platform.value, new Map());
     }
     for (const post of posts) {
-      const platformMap = map.get(post.platform);
-      if (platformMap) {
-        if (!platformMap.has(post.scheduled_date)) platformMap.set(post.scheduled_date, []);
-        platformMap.get(post.scheduled_date)!.push(post);
+      const postPlatforms = post.platforms ?? [];
+      for (const plt of postPlatforms) {
+        const platformMap = map.get(plt);
+        if (platformMap) {
+          if (!platformMap.has(post.scheduled_date)) platformMap.set(post.scheduled_date, []);
+          platformMap.get(post.scheduled_date)!.push(post);
+        }
       }
     }
     return map;
@@ -268,7 +272,7 @@ function WeeklyGanttFull({
                     `}
                   >
                     {dayPosts.map((post) => (
-                      <PostTitleChip key={post.id} post={post} />
+                      <PostTitleChip key={post.id} post={post} platformContext={platform.value} />
                     ))}
                     {dayPosts.length === 0 && (
                       <div className="flex-1 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -371,7 +375,8 @@ function WeeklyGanttCompact({
                 `}
               >
                 {dayPosts.slice(0, 3).map((post) => {
-                  const style = PLATFORM_STYLE[post.platform];
+                  const plt0 = post.platforms?.[0] ?? "facebook";
+                  const style = PLATFORM_STYLE[plt0] ?? PLATFORM_STYLE.facebook;
                   const displayTitle = post.title || post.content.slice(0, 12) + "...";
                   return (
                     <div

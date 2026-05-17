@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPost, getCurrentUserRole } from "@/lib/actions/posts";
+import { getPost, getCurrentUserRole, getPostAttachments } from "@/lib/actions/posts";
 import { PostDetailClient } from "./post-detail-client";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +10,10 @@ interface PostDetailPageProps {
 
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { id } = await params;
-  const [{ data: post, error }, userRole] = await Promise.all([
+  const [{ data: post, error }, userRole, { data: attachments }] = await Promise.all([
     getPost(id),
     getCurrentUserRole(),
+    getPostAttachments(id),
   ]);
 
   if (error || !post) {
@@ -21,5 +22,11 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const isManager = userRole === "manager" || userRole === "super_admin";
 
-  return <PostDetailClient post={post} isManager={isManager} />;
+  return (
+    <PostDetailClient
+      post={post}
+      isManager={isManager}
+      initialAttachments={attachments ?? []}
+    />
+  );
 }

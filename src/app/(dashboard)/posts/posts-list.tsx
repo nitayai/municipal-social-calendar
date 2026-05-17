@@ -42,7 +42,7 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
           cmp = `${a.scheduled_date}${a.scheduled_time}`.localeCompare(`${b.scheduled_date}${b.scheduled_time}`);
           break;
         case "platform":
-          cmp = getPlatformLabel(a.platform).localeCompare(getPlatformLabel(b.platform), "he");
+          cmp = (a.platforms?.[0] ? getPlatformLabel(a.platforms[0]) : "").localeCompare(b.platforms?.[0] ? getPlatformLabel(b.platforms[0]) : "", "he");
           break;
         case "department":
           cmp = (a.department || "").localeCompare(b.department || "", "he");
@@ -116,7 +116,7 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
                 <Link href={`/posts/${post.id}`} className="block">
                   <div className="flex items-start justify-between gap-3 mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{getPlatformLabel(post.platform)}</span>
+                      <span className="font-medium">{post.platforms?.map(p => getPlatformLabel(p)).join(" + ") || ""}</span>
                       <span className="text-gray-400">|</span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{post.department}</span>
                     </div>
@@ -162,7 +162,7 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm" dir="ltr">
                       {post.scheduled_time.slice(0, 5)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{getPlatformLabel(post.platform)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{post.platforms?.map(p => getPlatformLabel(p)).join(" + ") || ""}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{post.department}</td>
                     <td className="px-6 py-4 text-sm max-w-[200px]">
                       <span className="truncate block text-gray-700 dark:text-gray-300">

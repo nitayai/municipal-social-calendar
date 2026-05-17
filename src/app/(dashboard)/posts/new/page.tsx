@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PLATFORMS } from "@/lib/constants";
-import type { PostPlatform, PostStatus, Department } from "@/types";
+import type { Department, PostPlatform, PostStatus } from "@/types";
 
 const PLATFORM_COLORS: Record<PostPlatform, string> = {
   facebook: "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300",
@@ -27,27 +27,46 @@ const PLATFORM_SELECTED_COLORS: Record<PostPlatform, string> = {
 
 interface FieldErrors {
   scheduled_date?: string;
-  scheduled_time?: string;
   platforms?: string;
   department_id?: string;
   title?: string;
   content?: string;
 }
 
+interface PendingAttachment {
+  type: "file" | "link";
+  file?: File;
+  url?: string;
+  name?: string;
+  previewName: string;
+}
+
+function isGoogleDriveUrl(url: string) {
+  return url.includes("drive.google.com") || url.includes("docs.google.com");
+}
+
 export default function NewPostPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillDate = searchParams.get("date") ?? "";
+  const prefillPlatform = searchParams.get("platform") as PostPlatform | null;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<PostPlatform[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<PostPlatform[]>(
+    prefillPlatform ? [prefillPlatform] : []
+  );
+
+  // Attachment state
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [newLinkName, setNewLinkName] = useState("");
 
   const [formData, setFormData] = useState({
     department_id: "",
@@ -55,7 +74,6 @@ export default function NewPostPage() {
     scheduled_time: "",
     title: "",
     content: "",
-    external_link: "",
   });
 
   useEffect(() => {
@@ -67,25 +85,20 @@ export default function NewPostPage() {
         if (data) {
           setDepartments(data);
           const defaultDept = data.find((d) => d.is_default);
-          if (defaultDept) {
-            setFormData((prev) => ({ ...prev, department_id: defaultDept.id }));
-          }
+          if (defaultDept) setFormData(prev => ({ ...prev, department_id: defaultDept.id }));
         }
-      } catch (err) {
-        console.error("Error loading departments:", err);
-      } finally {
-        setLoadingDepartments(false);
-      }
+      } catch { /* ignore */ }
+      finally { setLoadingDepartments(false); }
     }
     loadDepartments();
   }, []);
 
   const togglePlatform = (platform: PostPlatform) => {
-    setSelectedPlatforms((prev) =>
-      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
+    setSelectedPlatforms(prev =>
+      prev.includes(platform) ? prev.filter(p => p !== platform) : [...prev, platform]
     );
-    setTouched((prev) => ({ ...prev, platforms: true }));
-    setFieldErrors((prev) => ({ ...prev, platforms: undefined }));
+    setTouched(prev => ({ ...prev, platforms: true }));
+    setFieldErrors(prev => ({ ...prev, platforms: undefined }));
   };
 
   const validateAll = (): boolean => {
@@ -99,66 +112,78 @@ export default function NewPostPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleBlur = (name: string) => {
-    setTouched((prev) => ({ ...prev, [name]: true }));
+  const handleBlur = (name: string) => setTouched(prev => ({ ...prev, [name]: true }));
+
+  const fieldClass = (name: string) =>
+    `w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-[#1a1a1a] disabled:text-gray-500 ${
+      touched[name] && fieldErrors[name as keyof FieldErrors]
+        ? "border-red-400 dark:border-red-600"
+        : "border-gray-300 dark:border-[#3a3a3a]"
+    }`;
+
+  // Attachment helpers
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const newAttachments: PendingAttachment[] = files.map(f => ({
+      type: "file", file: f, previewName: f.name,
+    }));
+    setPendingAttachments(prev => [...prev, ...newAttachments]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedFile(e.target.files?.[0] || null);
+  const handleAddLink = () => {
+    if (!newLinkUrl.trim()) return;
+    const name = newLinkName.trim() || (isGoogleDriveUrl(newLinkUrl) ? "Google Drive" : newLinkUrl);
+    setPendingAttachments(prev => [...prev, { type: "link", url: newLinkUrl.trim(), name, previewName: name }]);
+    setNewLinkUrl(""); setNewLinkName(""); setShowAddLink(false);
+  };
+
+  const removePendingAttachment = (idx: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = async (status: PostStatus) => {
-    setTouched({
-      scheduled_date: true,
-      platforms: true,
-      department_id: true,
-      title: true,
-      content: true,
-    });
-
+    setTouched({ scheduled_date: true, platforms: true, department_id: true, title: true, content: true });
     if (!validateAll()) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      let attachmentUrl: string | null = null;
-      if (selectedFile) {
-        const { uploadFileToStorage } = await import("@/lib/upload");
-        const uploadResult = await uploadFileToStorage(selectedFile);
-        if (uploadResult.error) {
-          setError(uploadResult.error);
-          setLoading(false);
-          return;
-        }
-        attachmentUrl = uploadResult.url;
-      }
-
-      const selectedDept = departments.find((d) => d.id === formData.department_id);
+      const selectedDept = departments.find(d => d.id === formData.department_id);
       const { createPost } = await import("@/lib/actions/posts");
 
-      const results = await Promise.all(
-        selectedPlatforms.map((platform) =>
-          createPost({
-            department: selectedDept?.name || "כללי",
-            department_id: formData.department_id || null,
-            platform,
-            scheduled_date: formData.scheduled_date,
-            scheduled_time: formData.scheduled_time || "00:00",
-            title: formData.title.trim() || null,
-            content: formData.content,
-            external_link: formData.external_link || null,
-            attachment_url: attachmentUrl,
-            status,
-          })
-        )
-      );
+      const { data: newPost, error: createError } = await createPost({
+        department: selectedDept?.name || "כללי",
+        department_id: formData.department_id || null,
+        platforms: selectedPlatforms,
+        scheduled_date: formData.scheduled_date,
+        scheduled_time: formData.scheduled_time || "00:00",
+        title: formData.title.trim() || null,
+        content: formData.content,
+        status,
+      });
 
-      const errors = results.filter((r) => r.error);
-      if (errors.length > 0) {
-        setError(`שגיאה ביצירת ${errors.length} פוסטים: ${errors[0].error}`);
+      if (createError || !newPost) {
+        setError(createError || "שגיאה ביצירת הפוסט");
         setLoading(false);
         return;
+      }
+
+      // Upload pending attachments
+      if (pendingAttachments.length > 0) {
+        const { createAttachment } = await import("@/lib/actions/posts");
+        const { uploadFileToStorage } = await import("@/lib/upload");
+
+        for (const att of pendingAttachments) {
+          if (att.type === "file" && att.file) {
+            const { url, error: uploadErr } = await uploadFileToStorage(att.file);
+            if (!uploadErr && url) {
+              await createAttachment({ post_id: newPost.id, type: "upload", url, name: att.file.name });
+            }
+          } else if (att.type === "link" && att.url) {
+            await createAttachment({ post_id: newPost.id, type: "link", url: att.url, name: att.name ?? att.url });
+          }
+        }
       }
 
       router.push("/posts");
@@ -168,282 +193,173 @@ export default function NewPostPage() {
     }
   };
 
+  const isFormValid = () =>
+    !!(formData.scheduled_date && selectedPlatforms.length > 0 && formData.department_id && formData.title.trim() && formData.content.trim());
+
   const RequiredMark = () => <span className="text-red-500 mr-1">*</span>;
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4 sm:mb-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500"
-          aria-label="חזור"
-        >
+        <button type="button" onClick={() => router.back()}
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500" aria-label="חזור">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <h2 className="text-xl sm:text-2xl font-bold">פוסט חדש</h2>
+        <h1 className="text-xl sm:text-2xl font-bold">פוסט חדש</h1>
       </div>
 
-      <div className="bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-xl p-4 sm:p-6 max-w-2xl">
-        <div className="space-y-5">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-6 space-y-4">
 
           {/* Date & Time */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="scheduled_date" className="block text-sm font-medium mb-1.5">
-                <RequiredMark />
-                תאריך פרסום
-              </label>
-              <input
-                id="scheduled_date"
-                type="date"
-                value={formData.scheduled_date}
-                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                onBlur={() => handleBlur("scheduled_date")}
-                className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  touched.scheduled_date && fieldErrors.scheduled_date
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-[#3a3a3a]"
-                }`}
-                dir="ltr"
-              />
-              {touched.scheduled_date && fieldErrors.scheduled_date && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.scheduled_date}</p>
-              )}
+              <label className="block text-sm font-medium mb-1.5"><RequiredMark />תאריך פרסום</label>
+              <input type="date" value={formData.scheduled_date}
+                onChange={e => setFormData({...formData, scheduled_date: e.target.value})}
+                onBlur={() => handleBlur("scheduled_date")} className={fieldClass("scheduled_date")} dir="ltr" />
+              {touched.scheduled_date && fieldErrors.scheduled_date && <p className="mt-1 text-xs text-red-500">{fieldErrors.scheduled_date}</p>}
             </div>
-
             <div>
-              <label htmlFor="scheduled_time" className="block text-sm font-medium mb-1.5">
-                שעת פרסום
-                <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-1">(אופציונלי)</span>
-              </label>
-              <input
-                id="scheduled_time"
-                type="time"
-                value={formData.scheduled_time}
-                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                onBlur={() => handleBlur("scheduled_time")}
-                className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  touched.scheduled_time && fieldErrors.scheduled_time
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-[#3a3a3a]"
-                }`}
-                dir="ltr"
-              />
-              {touched.scheduled_time && fieldErrors.scheduled_time && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.scheduled_time}</p>
-              )}
+              <label className="block text-sm font-medium mb-1.5">שעת פרסום</label>
+              <input type="time" value={formData.scheduled_time}
+                onChange={e => setFormData({...formData, scheduled_time: e.target.value})}
+                className={fieldClass("scheduled_time")} dir="ltr" />
             </div>
           </div>
 
-          {/* Platform multi-select */}
+          {/* Platforms */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              <RequiredMark />
-              פלטפורמות
-              {selectedPlatforms.length > 1 && (
-                <span className="mr-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  ({selectedPlatforms.length} נבחרו — ייווצרו {selectedPlatforms.length} פוסטים)
-                </span>
-              )}
-            </label>
+            <label className="block text-sm font-medium mb-1.5"><RequiredMark />פלטפורמות</label>
             <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((p) => {
-                const isSelected = selectedPlatforms.includes(p.value);
-                return (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => togglePlatform(p.value)}
-                    className={`
-                      flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 font-medium text-sm
-                      transition-all duration-150 select-none
-                      ${isSelected
-                        ? PLATFORM_SELECTED_COLORS[p.value]
-                        : `${PLATFORM_COLORS[p.value]} hover:opacity-80`
-                      }
-                    `}
-                  >
-                    {isSelected && (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                      </svg>
-                    )}
-                    {p.label}
-                  </button>
-                );
-              })}
+              {PLATFORMS.map(p => (
+                <button key={p.value} type="button" onClick={() => togglePlatform(p.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    selectedPlatforms.includes(p.value)
+                      ? PLATFORM_SELECTED_COLORS[p.value]
+                      : `${PLATFORM_COLORS[p.value]} hover:opacity-80`
+                  }`}>
+                  {p.label}
+                </button>
+              ))}
             </div>
-            {touched.platforms && fieldErrors.platforms && (
-              <p className="mt-1.5 text-xs text-red-500">{fieldErrors.platforms}</p>
-            )}
+            {touched.platforms && fieldErrors.platforms && <p className="mt-1 text-xs text-red-500">{fieldErrors.platforms}</p>}
           </div>
 
           {/* Department */}
           <div>
-            <label htmlFor="department_id" className="block text-sm font-medium mb-1.5">
-              <RequiredMark />
-              מחלקה
-            </label>
-            <select
-              id="department_id"
-              value={formData.department_id}
-              onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+            <label className="block text-sm font-medium mb-1.5"><RequiredMark />מחלקה</label>
+            <select value={formData.department_id}
+              onChange={e => setFormData({...formData, department_id: e.target.value})}
               onBlur={() => handleBlur("department_id")}
-              disabled={loadingDepartments}
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors ${
-                touched.department_id && fieldErrors.department_id
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-[#3a3a3a]"
-              }`}
-            >
-              <option value="">בחר מחלקה</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
+              disabled={loadingDepartments} className={fieldClass("department_id")}>
+              <option value="">בחר מחלקה...</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
-            {touched.department_id && fieldErrors.department_id && (
-              <p className="mt-1 text-xs text-red-500">{fieldErrors.department_id}</p>
-            )}
+            {touched.department_id && fieldErrors.department_id && <p className="mt-1 text-xs text-red-500">{fieldErrors.department_id}</p>}
           </div>
 
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-1.5">
-              <RequiredMark />
-              כותרת הפוסט
-              <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-2">(תופיע בגאנט)</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              onBlur={() => handleBlur("title")}
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                touched.title && fieldErrors.title
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-[#3a3a3a]"
-              }`}
-              placeholder="לדוגמה: פוסט נחשים, פוסט ותיקים..."
-            />
-            {touched.title && fieldErrors.title && (
-              <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>
-            )}
+            <label className="block text-sm font-medium mb-1.5"><RequiredMark />כותרת</label>
+            <input type="text" value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+              onBlur={() => handleBlur("title")} className={fieldClass("title")} placeholder="כותרת הפוסט..." />
+            {touched.title && fieldErrors.title && <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>}
           </div>
 
           {/* Content */}
           <div>
-            <label htmlFor="content" className="block text-sm font-medium mb-1.5">
-              <RequiredMark />
-              תוכן הפוסט
-            </label>
-            <textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              onBlur={() => handleBlur("content")}
-              rows={6}
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors ${
-                touched.content && fieldErrors.content
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-[#3a3a3a]"
-              }`}
-              placeholder="כתוב את תוכן הפוסט כאן..."
-            />
-            {touched.content && fieldErrors.content && (
-              <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>
-            )}
+            <label className="block text-sm font-medium mb-1.5"><RequiredMark />תוכן הפוסט</label>
+            <textarea value={formData.content}
+              onChange={e => setFormData({...formData, content: e.target.value})}
+              onBlur={() => handleBlur("content")} rows={6}
+              className={`${fieldClass("content")} resize-none`} placeholder="כתוב כאן את תוכן הפוסט..." />
+            {touched.content && fieldErrors.content && <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>}
           </div>
 
-          {/* External link */}
+          {/* Attachments */}
           <div>
-            <label htmlFor="external_link" className="block text-sm font-medium mb-1.5">
-              קישור חיצוני
-              <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-1">(אופציונלי)</span>
-            </label>
-            <input
-              id="external_link"
-              type="url"
-              value={formData.external_link}
-              onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="https://example.com"
-              dir="ltr"
-            />
-          </div>
+            <label className="block text-sm font-medium mb-2">קבצים וקישורים <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
 
-          {/* File attachment */}
-          <div>
-            <label htmlFor="attachment" className="block text-sm font-medium mb-1.5">
-              קובץ מצורף
-              <span className="text-xs font-normal text-gray-400 dark:text-gray-500 mr-1">(אופציונלי)</span>
-            </label>
-            <input
-              id="attachment"
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] focus:outline-none focus:ring-2 focus:ring-blue-500 file:ml-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 text-sm text-gray-500 dark:text-gray-400"
-            />
-            {selectedFile && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                נבחר: {selectedFile.name}
-              </p>
+            {/* Pending attachments list */}
+            {pendingAttachments.length > 0 && (
+              <div className="space-y-1.5 mb-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">
+                {pendingAttachments.map((att, idx) => (
+                  <div key={idx} className="flex items-center gap-2 group">
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {att.type === "link" ? (isGoogleDriveUrl(att.url ?? "") ? "🗂️" : "🔗") : "📎"}
+                    </span>
+                    <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">{att.previewName}</span>
+                    <button type="button" onClick={() => removePendingAttachment(idx)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all" title="הסר">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
-            <p className="mt-1 text-xs text-gray-400 dark:text-gray-600">
-              PDF, תמונות (JPG, PNG, GIF, WebP), מסמכי Word
-            </p>
-          </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="text-red-600 dark:text-red-400 text-sm p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              {error}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-dashed border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 text-gray-600 dark:text-gray-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                </svg>
+                העלה קבצים
+              </button>
+              <input ref={fileInputRef} type="file" multiple className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.docx,.doc,.mp4,.mov,.avi,.webm"
+                onChange={handleFileSelect} />
+              <button type="button" onClick={() => setShowAddLink(!showAddLink)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-dashed border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 text-gray-600 dark:text-gray-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                </svg>
+                הוסף קישור
+              </button>
             </div>
+
+            {showAddLink && (
+              <div className="mt-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a] space-y-2">
+                <input type="url" value={newLinkUrl} onChange={e => setNewLinkUrl(e.target.value)}
+                  placeholder="https://drive.google.com/..." dir="ltr"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={newLinkName} onChange={e => setNewLinkName(e.target.value)}
+                  placeholder="שם לקישור (אופציונלי)"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <div className="flex gap-2">
+                  <button type="button" onClick={handleAddLink} disabled={!newLinkUrl.trim()}
+                    className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50">הוסף</button>
+                  <button type="button" onClick={() => { setShowAddLink(false); setNewLinkUrl(""); setNewLinkName(""); }}
+                    className="px-3 py-1.5 text-xs border border-gray-300 dark:border-[#3a3a3a] text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">ביטול</button>
+                </div>
+              </div>
+            )}
+
+            <p className="mt-2 text-xs text-gray-400">PDF, תמונות, סרטונים, Word · גם קישורי Google Drive</p>
+          </div>
+
+          {error && (
+            <div className="text-red-600 dark:text-red-400 text-sm p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">{error}</div>
           )}
 
-          {/* Submit buttons */}
           <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-200 dark:border-[#2a2a2a]">
-            <button
-              type="button"
-              onClick={() => handleSubmit("draft")}
-              disabled={loading}
-              className="flex-1 sm:flex-none px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
+            <button type="button" onClick={() => handleSubmit("draft")} disabled={loading}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
               {loading ? "שומר..." : "שמור כטיוטה"}
             </button>
-            <button
-              type="button"
-              onClick={() => handleSubmit("pending_approval")}
-              disabled={loading || !isFormValid()}
-              className="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              {loading
-                ? "שולח..."
-                : selectedPlatforms.length > 1
-                ? `שלח לאישור (${selectedPlatforms.length} פוסטים)`
-                : "שלח לאישור"}
+            <button type="button" onClick={() => handleSubmit("pending_approval")} disabled={loading || !isFormValid()}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
+              {loading ? "שולח..." : "שלח לאישור"}
             </button>
           </div>
-
         </div>
       </div>
     </div>
   );
-
-  function isFormValid(): boolean {
-    return !!(
-      formData.scheduled_date &&
-      selectedPlatforms.length > 0 &&
-      formData.department_id &&
-      formData.title.trim() &&
-      formData.content.trim()
-    );
-  }
 }
