@@ -57,12 +57,16 @@ export async function cleanupArchivedAttachments(): Promise<{ deletedCount: numb
     .returns<Array<{ id: string; url: string }>>();
   if (attErr) return { deletedCount: 0, error: attErr.message };
   if (!attachments || attachments.length === 0) return { deletedCount: 0, error: null };
-  const { deleteFileFromStorage } = await import("@/lib/upload");
   let deletedCount = 0;
   const deletedIds: string[] = [];
   for (const att of attachments) {
-    const { error: storageErr } = await deleteFileFromStorage(att.url);
-    if (!storageErr) { deletedIds.push(att.id); deletedCount++; }
+    const bucketPath = att.url.split("/post-attachments/")[1];
+    if (bucketPath) {
+      const { error: storageErr } = await supabase.storage.from("post-attachments").remove([bucketPath]);
+      if (!storageErr) { deletedIds.push(att.id); deletedCount++; }
+    } else {
+      deletedIds.push(att.id); deletedCount++;
+    }
   }
   if (deletedIds.length > 0) {
     await supabase.from("post_attachments").delete().in("id", deletedIds);

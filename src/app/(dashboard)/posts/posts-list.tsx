@@ -155,57 +155,52 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
 
           {/* Desktop table view */}
           <div className="hidden md:block bg-white dark:bg-[#171717] shadow dark:shadow-none dark:border dark:border-[#2a2a2a] rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
               <thead className="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <ThSort field="scheduled_date" label="תאריך" />
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">שעה</th>
+                  <ThSort field="scheduled_date" label="תאריך ושעה" />
                   <ThSort field="platform" label="פלטפורמה" />
                   <ThSort field="department" label="מחלקה" />
                   <ThSort field="title" label="כותרת" />
                   <ThSort field="status" label="סטטוס" />
-                  <ThSort field="updated_at" label="עריכה אחרונה" />
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">יוצר</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">פעולות</th>
+                  <ThSort field="updated_at" label="עריכה" />
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">יוצר</th>
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">פעולות</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {sorted.map((post) => (
                   <tr key={post.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {new Date(post.scheduled_date).toLocaleDateString("he-IL")}
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      <div>{new Date(post.scheduled_date).toLocaleDateString("he-IL")}</div>
+                      <div className="text-xs text-gray-400" dir="ltr">{post.scheduled_time.slice(0, 5)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" dir="ltr">
-                      {post.scheduled_time.slice(0, 5)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{post.platforms?.map(p => getPlatformLabel(p)).join(" + ") || ""}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{post.department}</td>
-                    <td className="px-6 py-4 text-sm max-w-[200px]">
-                      <span className="truncate block text-gray-700 dark:text-gray-300">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">{post.platforms?.map(p => getPlatformLabel(p)).join(", ") || ""}</td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">{post.department}</td>
+                    <td className="px-3 py-3 text-sm">
+                      <span className="truncate block max-w-[160px] text-gray-700 dark:text-gray-300">
                         {post.title || <span className="text-gray-400 dark:text-gray-600 italic text-xs">ללא כותרת</span>}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
                         <StatusBadge status={post.status} />
                         {post.is_scheduled && (
-                          <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5" title="מתוזמן בפלטפורמה">
-                            🕐{post.platform_scheduled_time ? <span className="tabular-nums">{post.platform_scheduled_time.slice(0,5)}</span> : null}
-                          </span>
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400" title="מתוזמן בפלטפורמה">🕐</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                       {post.updated_at ? new Date(post.updated_at).toLocaleDateString("he-IL") : "—"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                    <td className="px-3 py-3 whitespace-nowrap text-xs">
                       <div className="space-y-0.5">
-                        {post.created_by_name && <div className="text-gray-500 dark:text-gray-400">{post.created_by_name}</div>}
-                        {post.approved_by_name && <div className="text-emerald-600 dark:text-emerald-500">✓ {post.approved_by_name}</div>}
+                        {post.created_by_name && <div className="text-gray-500 dark:text-gray-400 truncate max-w-[100px]">{post.created_by_name}</div>}
+                        {post.approved_by_name && <div className="text-emerald-600 dark:text-emerald-500 truncate max-w-[100px]">✓ {post.approved_by_name}</div>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-4">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-2">
                         <Link
                           href={`/posts/${post.id}`}
                           className="text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors"
