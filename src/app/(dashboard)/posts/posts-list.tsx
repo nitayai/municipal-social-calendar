@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { DeletePostButton } from "@/components/ui/delete-post-button";
 import type { Post } from "@/types";
 
-type SortField = "scheduled_date" | "platform" | "department" | "title" | "status";
+type SortField = "scheduled_date" | "platform" | "department" | "title" | "status" | "updated_at";
 type SortDir = "asc" | "desc";
 
 const STATUS_ORDER: Record<string, number> = {
@@ -22,7 +22,7 @@ interface PostsListProps {
 
 export function PostsList({ posts, error, userRole }: PostsListProps) {
   const isManager = userRole === "manager" || userRole === "super_admin";
-  const [sortField, setSortField] = useState<SortField>("scheduled_date");
+  const [sortField, setSortField] = useState<SortField>("updated_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const handleSort = (field: SortField) => {
@@ -30,7 +30,7 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      setSortDir(field === "scheduled_date" ? "desc" : "asc");
+      setSortDir(field === "scheduled_date" || field === "updated_at" ? "desc" : "asc");
     }
   };
 
@@ -52,6 +52,9 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
           break;
         case "status":
           cmp = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+          break;
+        case "updated_at":
+          cmp = (a.updated_at || "").localeCompare(b.updated_at || "");
           break;
       }
       return sortDir === "asc" ? cmp : -cmp;
@@ -134,6 +137,11 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
                     )}
                   </div>
                   {post.content && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{post.content}</p>}
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-400">
+                    {post.created_by_name && <span>נוצר ע״י: {post.created_by_name}</span>}
+                    {post.approved_by_name && <span className="text-emerald-600 dark:text-emerald-500">אושר ע״י: {post.approved_by_name}</span>}
+                    {post.updated_at && <span className="mr-auto">{new Date(post.updated_at).toLocaleDateString("he-IL")}</span>}
+                  </div>
                 </Link>
               </div>
             ))}
@@ -150,6 +158,8 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
                   <ThSort field="department" label="מחלקה" />
                   <ThSort field="title" label="כותרת" />
                   <ThSort field="status" label="סטטוס" />
+                  <ThSort field="updated_at" label="עריכה אחרונה" />
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">יוצר</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">פעולות</th>
                 </tr>
               </thead>
@@ -177,6 +187,15 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
                             🕐{post.platform_scheduled_time ? <span className="tabular-nums">{post.platform_scheduled_time.slice(0,5)}</span> : null}
                           </span>
                         )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      {post.updated_at ? new Date(post.updated_at).toLocaleDateString("he-IL") : "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                      <div className="space-y-0.5">
+                        {post.created_by_name && <div className="text-gray-500 dark:text-gray-400">{post.created_by_name}</div>}
+                        {post.approved_by_name && <div className="text-emerald-600 dark:text-emerald-500">✓ {post.approved_by_name}</div>}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">

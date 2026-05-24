@@ -237,6 +237,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
     scheduled_time: post.scheduled_time,
     title: post.title || "",
     content: post.content,
+    notes: post.notes || "",
   });
 
   useEffect(() => {
@@ -367,6 +368,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
         scheduled_time: formData.scheduled_time || "00:00",
         title: formData.title.trim() || null,
         content: formData.content,
+        notes: formData.notes.trim() || null,
         status: newStatus,
       });
       if (saveError) { setError(saveError); setLoading(false); }
@@ -380,7 +382,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
       const { approvePost } = await import("@/lib/actions/posts");
       const { error: e } = await approvePost(post.id, approvalComment);
       if (e) { setError(e); setLoading(false); }
-      else { router.push("/posts"); router.refresh(); }
+      else { router.push("/calendar"); }
     } catch { setError("שגיאה באישור הפוסט"); setLoading(false); }
   };
 
@@ -391,7 +393,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
       const { rejectPost } = await import("@/lib/actions/posts");
       const { error: e } = await rejectPost(post.id, approvalComment);
       if (e) { setError(e); setLoading(false); }
-      else { router.push("/posts"); router.refresh(); }
+      else { router.push("/calendar"); }
     } catch { setError("שגיאה בדחיית הפוסט"); setLoading(false); }
   };
 
@@ -539,6 +541,22 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
               {canEdit && touched.content && fieldErrors.content && <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>}
             </div>
 
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">הערה <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
+              {canEdit ? (
+                <textarea value={formData.notes}
+                  onChange={e => setFormData({...formData, notes: e.target.value})}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="הערה פנימית על הפוסט..." />
+              ) : post.notes ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">{post.notes}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">אין הערה</p>
+              )}
+            </div>
+
             {/* Attachments section */}
             <div>
               <label className="block text-sm font-medium mb-2">קבצים וקישורים</label>
@@ -658,43 +676,78 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
           <div className="flex flex-wrap items-center gap-2">
             {canEdit && (
               <>
-                <DeletePostButton postId={post.id} redirectAfter="/posts"
+                <DeletePostButton postId={post.id} redirectAfter="/calendar"
                   className="px-4 py-2 text-red-600 hover:text-red-700 text-sm disabled:opacity-50" label="מחק" />
                 <button type="button" onClick={() => handleSave(false)} disabled={loading}
                   className="px-4 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-200 disabled:opacity-50">
-                  שמור שינויים
+                  {loading ? "שומר..." : "שמירת שינויים"}
                 </button>
                 {post.status === "draft" && (
                   <button type="button" onClick={() => handleSave(true)} disabled={loading || !isFormValid()}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {loading ? "שולח..." : "שלח לאישור"}
+                    {loading ? "שולח..." : "שליחה לאישור"}
                   </button>
                 )}
                 {canApprove && (
                   <>
                     <button type="button" onClick={handleReject} disabled={loading}
                       className="px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 text-red-700 dark:text-red-400 rounded-lg text-sm disabled:opacity-50">
-                      דחה
+                      דחייה
                     </button>
                     <button type="button" onClick={handleApprove} disabled={loading}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                      {loading ? "מאשר..." : "אשר פוסט"}
+                      {loading ? "מאשר..." : "אישור פוסט"}
                     </button>
                   </>
                 )}
               </>
             )}
-            <Link href="/posts" className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-              חזרה לרשימה
+            <Link href="/calendar" className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+              חזרה לגאנט
             </Link>
           </div>
         </div>
 
-        {/* ── Right: Preview ── */}
+        {/* ── Right: Preview + Meta ── */}
         <div className="space-y-4">
           <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-6">
             <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">תצוגה מקדימה</h2>
             <SocialPostPreview post={{ ...post, ...formData }} attachments={attachments} />
+          </div>
+
+          {/* Post meta: who created / approved / scheduled */}
+          <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-5">
+            <h2 className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">פרטי הפוסט</h2>
+            <div className="space-y-2">
+              {post.created_by_name && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-400 shrink-0">נוצר על ידי</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{post.created_by_name}</span>
+                  {post.created_at && (
+                    <span className="text-gray-400 text-xs mr-auto">{new Date(post.created_at).toLocaleDateString("he-IL")}</span>
+                  )}
+                </div>
+              )}
+              {post.approved_by_name && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-400 shrink-0">אושר על ידי</span>
+                  <span className="font-medium text-emerald-700 dark:text-emerald-400">{post.approved_by_name}</span>
+                </div>
+              )}
+              {post.is_scheduled && post.scheduled_by_name && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-400 shrink-0">תוזמן על ידי</span>
+                  <span className="font-medium text-blue-700 dark:text-blue-400">{post.scheduled_by_name}</span>
+                </div>
+              )}
+              {!post.created_by_name && !post.approved_by_name && !post.scheduled_by_name && (
+                <p className="text-xs text-gray-400 italic">אין מידע על יוצר הפוסט</p>
+              )}
+              <div className="flex items-center gap-2 text-xs text-gray-400 pt-1 border-t border-gray-100 dark:border-[#2a2a2a]">
+                <span>עודכן לאחרונה:</span>
+                <span>{new Date(post.updated_at).toLocaleDateString("he-IL")} {new Date(post.updated_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

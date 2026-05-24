@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PLATFORMS } from "@/lib/constants";
-import type { Department, PostPlatform, PostStatus } from "@/types";
+import type { Department, PostPlatform, PostStatus, UserRole } from "@/types";
 
 const PLATFORM_COLORS: Record<PostPlatform, string> = {
   facebook: "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300",
@@ -58,6 +58,7 @@ export default function NewPostPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<PostPlatform[]>(
     prefillPlatform ? [prefillPlatform] : []
   );
@@ -74,24 +75,29 @@ export default function NewPostPage() {
     scheduled_time: "",
     title: "",
     content: "",
+    notes: "",
   });
 
   useEffect(() => {
-    async function loadDepartments() {
+    async function loadData() {
       try {
         const { getDepartments, ensureDefaultDepartment } = await import("@/lib/actions/departments");
+        const { getCurrentUserRole } = await import("@/lib/actions/posts");
         await ensureDefaultDepartment();
-        const { data } = await getDepartments();
+        const [{ data }, role] = await Promise.all([getDepartments(), getCurrentUserRole()]);
         if (data) {
           setDepartments(data);
           const defaultDept = data.find((d) => d.is_default);
           if (defaultDept) setFormData(prev => ({ ...prev, department_id: defaultDept.id }));
         }
+        setUserRole(role);
       } catch { /* ignore */ }
       finally { setLoadingDepartments(false); }
     }
-    loadDepartments();
+    loadData();
   }, []);
+
+  const isManager = userRole === "manager" || userRole === "super_admin";
 
   const togglePlatform = (platform: PostPlatform) => {
     setSelectedPlatforms(prev =>
@@ -160,6 +166,7 @@ export default function NewPostPage() {
         scheduled_time: formData.scheduled_time || "00:00",
         title: formData.title.trim() || null,
         content: formData.content,
+        notes: formData.notes.trim() || null,
         status,
       });
 
@@ -186,7 +193,7 @@ export default function NewPostPage() {
         }
       }
 
-      router.push("/posts");
+      router.push("/calendar");
     } catch {
       setError("שגיאה ביצירת הפוסט");
       setLoading(false);
@@ -280,6 +287,16 @@ export default function NewPostPage() {
             {touched.content && fieldErrors.content && <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>}
           </div>
 
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">הערה <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
+            <textarea value={formData.notes}
+              onChange={e => setFormData({...formData, notes: e.target.value})}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="הערה פנימית על הפוסט..." />
+          </div>
+
           {/* Attachments */}
           <div>
             <label className="block text-sm font-medium mb-2">קבצים וקישורים <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
@@ -310,7 +327,7 @@ export default function NewPostPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
                 </svg>
-                העלה קבצים
+                העלאת קבצים
               </button>
               <input ref={fileInputRef} type="file" multiple className="hidden"
                 accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.docx,.doc,.mp4,.mov,.avi,.webm"
@@ -320,7 +337,7 @@ export default function NewPostPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
                 </svg>
-                הוסף קישור
+                הוספת קישור
               </button>
             </div>
 
@@ -351,12 +368,18 @@ export default function NewPostPage() {
           <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-200 dark:border-[#2a2a2a]">
             <button type="button" onClick={() => handleSubmit("draft")} disabled={loading}
               className="flex-1 sm:flex-none px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
-              {loading ? "שומר..." : "שמור כטיוטה"}
+              {loading ? "שומר..." : "שמירה כטיוטה"}
             </button>
             <button type="button" onClick={() => handleSubmit("pending_approval")} disabled={loading || !isFormValid()}
               className="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
-              {loading ? "שולח..." : "שלח לאישור"}
+              {loading ? "שולח..." : "שליחה לאישור"}
             </button>
+            {isManager && (
+              <button type="button" onClick={() => handleSubmit("approved")} disabled={loading || !isFormValid()}
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
+                {loading ? "שומר..." : "אישור פוסט"}
+              </button>
+            )}
           </div>
         </div>
       </div>

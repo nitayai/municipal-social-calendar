@@ -79,9 +79,14 @@ export async function createPost(post: Omit<PostInsert, "created_by">): Promise<
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: "Not authenticated" };
-  const { data: profile } = await supabase.from("profiles").select("organization_id")
-    .eq("id", user.id).single<{ organization_id: string | null }>();
-  const insertData: PostInsert = { ...post, created_by: user.id, organization_id: profile?.organization_id ?? null };
+  const { data: profile } = await supabase.from("profiles").select("organization_id, full_name")
+    .eq("id", user.id).single<{ organization_id: string | null; full_name: string | null }>();
+  const insertData: PostInsert = {
+    ...post,
+    created_by: user.id,
+    organization_id: profile?.organization_id ?? null,
+    created_by_name: profile?.full_name || user.email || null,
+  };
   const { data, error } = await supabase.from("posts").insert(insertData as never).select().single<Post>();
   if (error) return { data: null, error: error.message };
   revalidatePath("/posts");
@@ -113,8 +118,17 @@ export async function revertToDraft(id: string): Promise<PostResult> {
 
 export async function updateScheduled(id: string, isScheduled: boolean, platformScheduledTime: string | null): Promise<{ error: string | null }> {
   const supabase = await createClient();
-  const { error } = await supabase.from("posts")
-    .update({ is_scheduled: isScheduled, platform_scheduled_time: platformScheduledTime } as never).eq("id", id);
+  let scheduledByName: string | null = null;
+  if (isScheduled) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single<{ full_name: string | null }>();
+      scheduledByName = profile?.full_name || user.email || null;
+    }
+  }
+  const updateData: Record<string, unknown> = { is_scheduled: isScheduled, platform_scheduled_time: platformScheduledTime };
+  if (isScheduled && scheduledByName) updateData.scheduled_by_name = scheduledByName;
+  const { error } = await supabase.from("posts").update(updateData as never).eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/posts");
   revalidatePath(`/posts/${id}`);
@@ -129,10 +143,15 @@ export async function approvePost(id: string, comment?: string): Promise<PostRes
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: "Not authenticated" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single<{ role: string }>();
+  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single<{ role: string; full_name: string | null }>();
   if (!profile || !["manager", "super_admin"].includes(profile.role))
     return { data: null, error: "Unauthorized" };
-  return updatePost(id, { status: "approved", approval_comment: comment || null });
+  return updatePost(id, {
+    status: "approved",
+    approval_comment: comment || null,
+    approved_by: user.id,
+    approved_by_name: profile.full_name || user.email || null,
+  });
 }
 
 export async function rejectPost(id: string, comment: string): Promise<PostResult> {

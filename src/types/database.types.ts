@@ -28,6 +28,9 @@ export interface Database {
           title: string | null; content: string; status: PostStatus;
           created_by: string | null; approval_comment: string | null;
           is_scheduled: boolean; platform_scheduled_time: string | null;
+          notes: string | null; created_by_name: string | null;
+          approved_by: string | null; approved_by_name: string | null;
+          scheduled_by_name: string | null;
           created_at: string; updated_at: string;
         };
         Insert: {
@@ -36,6 +39,9 @@ export interface Database {
           title?: string | null; content: string; status?: PostStatus;
           created_by?: string | null; approval_comment?: string | null;
           is_scheduled?: boolean; platform_scheduled_time?: string | null;
+          notes?: string | null; created_by_name?: string | null;
+          approved_by?: string | null; approved_by_name?: string | null;
+          scheduled_by_name?: string | null;
           created_at?: string; updated_at?: string;
         };
         Update: {
@@ -44,6 +50,9 @@ export interface Database {
           title?: string | null; content?: string; status?: PostStatus;
           created_by?: string | null; approval_comment?: string | null;
           is_scheduled?: boolean; platform_scheduled_time?: string | null;
+          notes?: string | null; created_by_name?: string | null;
+          approved_by?: string | null; approved_by_name?: string | null;
+          scheduled_by_name?: string | null;
           created_at?: string; updated_at?: string;
         };
       };
