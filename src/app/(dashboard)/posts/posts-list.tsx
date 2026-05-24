@@ -80,7 +80,13 @@ export function PostsList({ posts, error, userRole }: PostsListProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold">פוסטים</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold">פוסטים</h2>
+          <Link href="/posts/archive"
+            className="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 border border-gray-200 dark:border-[#3a3a3a] rounded-md px-2 py-1 transition-colors">
+            ארכיון
+          </Link>
+        </div>
         <Link
           href="/posts/new"
           className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base rounded-md transition-colors"

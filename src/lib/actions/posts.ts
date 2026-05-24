@@ -19,6 +19,57 @@ export async function getPosts(): Promise<PostsResult> {
   return { data, error: null };
 }
 
+export async function getActivePosts(): Promise<PostsResult> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabase
+    .from("posts").select("*")
+    .gte("scheduled_date", today)
+    .order("updated_at", { ascending: false })
+    .returns<Post[]>();
+  if (error) return { data: null, error: error.message };
+  return { data, error: null };
+}
+
+export async function getArchivedPosts(): Promise<PostsResult> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabase
+    .from("posts").select("*")
+    .lt("scheduled_date", today)
+    .order("scheduled_date", { ascending: false })
+    .returns<Post[]>();
+  if (error) return { data: null, error: error.message };
+  return { data, error: null };
+}
+
+export async function cleanupArchivedAttachments(): Promise<{ deletedCount: number; error: string | null }> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
+  const { data: archivedPosts, error: postsErr } = await supabase
+    .from("posts").select("id").lt("scheduled_date", today);
+  if (postsErr) return { deletedCount: 0, error: postsErr.message };
+  if (!archivedPosts || archivedPosts.length === 0) return { deletedCount: 0, error: null };
+  const archivedIds = archivedPosts.map((p: { id: string }) => p.id);
+  const { data: attachments, error: attErr } = await supabase
+    .from("post_attachments").select("id, url")
+    .in("post_id", archivedIds).eq("type", "upload")
+    .returns<Array<{ id: string; url: string }>>();
+  if (attErr) return { deletedCount: 0, error: attErr.message };
+  if (!attachments || attachments.length === 0) return { deletedCount: 0, error: null };
+  const { deleteFileFromStorage } = await import("@/lib/upload");
+  let deletedCount = 0;
+  const deletedIds: string[] = [];
+  for (const att of attachments) {
+    const { error: storageErr } = await deleteFileFromStorage(att.url);
+    if (!storageErr) { deletedIds.push(att.id); deletedCount++; }
+  }
+  if (deletedIds.length > 0) {
+    await supabase.from("post_attachments").delete().in("id", deletedIds);
+  }
+  return { deletedCount, error: null };
+}
+
 export async function getPostsByMonth(year: number, month: number): Promise<PostsResult> {
   const supabase = await createClient();
   const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
@@ -52,8 +103,7 @@ export async function getPostAttachments(postId: string): Promise<AttachmentsRes
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("post_attachments").select("*")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true })
+    .eq("post_id", postId).order("created_at", { ascending: true })
     .returns<PostAttachment[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
@@ -79,8 +129,9 @@ export async function createPost(post: Omit<PostInsert, "created_by">): Promise<
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: "Not authenticated" };
-  const { data: profile } = await supabase.from("profiles").select("organization_id, full_name")
-    .eq("id", user.id).single<{ organization_id: string | null; full_name: string | null }>();
+  const { data: profile } = await supabase.from("profiles")
+    .select("organization_id, full_name").eq("id", user.id)
+    .single<{ organization_id: string | null; full_name: string | null }>();
   const insertData: PostInsert = {
     ...post,
     created_by: user.id,
@@ -120,15 +171,21 @@ export async function updateScheduled(id: string, isScheduled: boolean, platform
   const supabase = await createClient();
   let scheduledByName: string | null = null;
   if (isScheduled) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const authData = await supabase.auth.getUser();
+    const user = authData.data.user;
     if (user) {
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single<{ full_name: string | null }>();
-      scheduledByName = profile?.full_name || user.email || null;
+      const profileRes = await supabase.from("profiles")
+        .select("full_name").eq("id", user.id)
+        .single<{ full_name: string | null }>();
+      scheduledByName = profileRes.data?.full_name || user.email || null;
     }
   }
-  const updateData: Record<string, unknown> = { is_scheduled: isScheduled, platform_scheduled_time: platformScheduledTime };
-  if (isScheduled && scheduledByName) updateData.scheduled_by_name = scheduledByName;
-  const { error } = await supabase.from("posts").update(updateData as never).eq("id", id);
+  const updateFields: Record<string, unknown> = {
+    is_scheduled: isScheduled,
+    platform_scheduled_time: platformScheduledTime,
+  };
+  if (isScheduled && scheduledByName) updateFields.scheduled_by_name = scheduledByName;
+  const { error } = await supabase.from("posts").update(updateFields as never).eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/posts");
   revalidatePath(`/posts/${id}`);
@@ -141,9 +198,13 @@ export async function submitForApproval(id: string): Promise<PostResult> {
 
 export async function approvePost(id: string, comment?: string): Promise<PostResult> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authData = await supabase.auth.getUser();
+  const user = authData.data.user;
   if (!user) return { data: null, error: "Not authenticated" };
-  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single<{ role: string; full_name: string | null }>();
+  const profileRes = await supabase.from("profiles")
+    .select("role, full_name").eq("id", user.id)
+    .single<{ role: string; full_name: string | null }>();
+  const profile = profileRes.data;
   if (!profile || !["manager", "super_admin"].includes(profile.role))
     return { data: null, error: "Unauthorized" };
   return updatePost(id, {
@@ -156,9 +217,12 @@ export async function approvePost(id: string, comment?: string): Promise<PostRes
 
 export async function rejectPost(id: string, comment: string): Promise<PostResult> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authData = await supabase.auth.getUser();
+  const user = authData.data.user;
   if (!user) return { data: null, error: "Not authenticated" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single<{ role: string }>();
+  const profileRes = await supabase.from("profiles")
+    .select("role").eq("id", user.id).single<{ role: string }>();
+  const profile = profileRes.data;
   if (!profile || !["manager", "super_admin"].includes(profile.role))
     return { data: null, error: "Unauthorized" };
   return updatePost(id, { status: "rejected", approval_comment: comment });
@@ -166,8 +230,10 @@ export async function rejectPost(id: string, comment: string): Promise<PostResul
 
 export async function getCurrentUserRole(): Promise<UserRole | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authData = await supabase.auth.getUser();
+  const user = authData.data.user;
   if (!user) return null;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single<{ role: UserRole }>();
-  return profile?.role ?? "user";
+  const profileRes = await supabase.from("profiles")
+    .select("role").eq("id", user.id).single<{ role: UserRole }>();
+  return profileRes.data?.role ?? "user";
 }
