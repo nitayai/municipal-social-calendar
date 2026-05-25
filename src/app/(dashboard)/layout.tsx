@@ -32,7 +32,6 @@ export default async function DashboardLayout({
 
   const org = await getOrgForCurrentUser();
 
-  // For super admin: load all orgs + active org
   let allOrgs: import("@/lib/actions/admin").Organization[] = [];
   let activeOrgId: string | null = null;
   if (isSuperAdmin) {
@@ -49,26 +48,42 @@ export default async function DashboardLayout({
     ...(isSuperAdmin ? [{ href: "/admin", label: "ניהול מערכת" }] : []),
   ];
 
-  const displayName = org?.name ?? "מערכת שיווק";
+  const orgName = org?.name ?? null;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0f0f0f]">
-      <header className="border-b border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#141414] sticky top-0 z-40">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#080808]">
+      {/* ─── Header ─────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 border-b border-gray-200/80 dark:border-white/[0.06] bg-white/95 dark:bg-[#0d0d0d]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-4 sm:gap-6">
-              {/* Brand + org */}
-              <Link href="/dashboard/home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity shrink-0">
+          <div className="flex justify-between items-center h-14 sm:h-16 gap-4">
+
+            {/* ── Brand ────────────────────────────────────────────────── */}
+            <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+              <Link href="/dashboard/home" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity shrink-0">
                 {org?.logo_url ? (
-                  <img src={org.logo_url} alt={org.name ?? ""} className="h-8 w-auto max-w-[80px] object-contain rounded" />
+                  <img src={org.logo_url} alt={orgName ?? ""} className="h-7 w-auto max-w-[60px] object-contain rounded" />
                 ) : null}
-                <div className="flex flex-col leading-tight">
-                  <span className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {displayName}
-                  </span>
-                  <a href="https://nitay.ai" target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-400 dark:text-blue-500 hover:underline">
-                    By nitay.ai
+                <div className="leading-tight">
+                  <div className="flex items-baseline gap-1 flex-wrap">
+                    <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 tracking-wide">
+                      מערכת שיווק
+                    </span>
+                    {orgName && (
+                      <>
+                        <span className="text-gray-300 dark:text-gray-700 text-xs">|</span>
+                        <span className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400 tracking-tight">
+                          {orgName}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <a
+                    href="https://nitay.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[9px] text-gray-400 dark:text-gray-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  >
+                    by nitay.ai
                   </a>
                 </div>
               </Link>
@@ -78,16 +93,16 @@ export default async function DashboardLayout({
                 <OrgSwitcher orgs={allOrgs} activeOrgId={activeOrgId} />
               )}
 
-              {/* Desktop navigation */}
-              <nav className="hidden md:flex gap-5">
+              {/* Desktop nav */}
+              <nav className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`text-sm transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       link.href === "/admin"
-                        ? "text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                        ? "text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
                     }`}
                   >
                     {link.label}
@@ -96,23 +111,24 @@ export default async function DashboardLayout({
               </nav>
             </div>
 
-            {/* Desktop actions */}
-            <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[180px]">
+            {/* ── Actions ──────────────────────────────────────────────── */}
+            <div className="hidden md:flex items-center gap-3">
+              <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[160px]">
                 {user.email}
               </span>
+              <div className="w-px h-4 bg-gray-200 dark:bg-white/10" />
               <ThemeToggle />
               <form action="/api/auth/signout" method="post">
                 <button
                   type="submit"
-                  className="text-sm text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 transition-colors"
+                  className="text-xs font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
                   התנתק
                 </button>
               </form>
             </div>
 
-            {/* Mobile actions */}
+            {/* Mobile */}
             <div className="flex md:hidden items-center gap-2">
               <ThemeToggle />
               <MobileMenu links={navLinks} userEmail={user.email || ""} />
@@ -120,6 +136,7 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {children}
       </main>

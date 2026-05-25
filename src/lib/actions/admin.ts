@@ -98,6 +98,36 @@ export async function updateProfile(id: string, updates: { role?: string; organi
   } catch (e: unknown) { return { error: (e as Error).message }; }
 }
 
+export async function inviteUser(
+  email: string,
+  role: string,
+  orgId: string | null
+): Promise<{ error: string | null }> {
+  try {
+    const supabase = await assertSuperAdmin();
+    const { error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)("admin_create_user", {
+      invite_email: email,
+      invite_role: role,
+      invite_org_id: orgId || null,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/admin");
+    return { error: null };
+  } catch (e: unknown) { return { error: (e as Error).message }; }
+}
+
+export async function deleteUser(userId: string): Promise<{ error: string | null }> {
+  try {
+    const supabase = await assertSuperAdmin();
+    const { error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)("admin_delete_user", {
+      target_user_id: userId,
+    });
+    if (error) return { error: error.message };
+    revalidatePath("/admin");
+    return { error: null };
+  } catch (e: unknown) { return { error: (e as Error).message }; }
+}
+
 export async function getOrgForCurrentUser(): Promise<{ id: string; name: string | null; logo_url: string | null } | null> {
   try {
     const supabase = await createClient();
@@ -111,7 +141,6 @@ export async function getOrgForCurrentUser(): Promise<{ id: string; name: string
       .single<{ organization_id: string | null; role: string }>();
     if (!profile) return null;
 
-    // For super_admin: use active org from cookie if set
     let orgId = profile.organization_id;
     if (profile.role === "super_admin") {
       const activeOrgId = await getActiveOrgId();
