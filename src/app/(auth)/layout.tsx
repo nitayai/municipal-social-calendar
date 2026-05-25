@@ -14,7 +14,7 @@ export default function AuthLayout({
         {children}
       </main>
       <footer className="p-4 text-center text-xs text-gray-400 dark:text-gray-600">
-        מערכת ניהול תוכן עירונית
+        מערכת שיווק ·{" "}<a href="https://nitay.ai" target="_blank" rel="noopener noreferrer" className="hover:underline">nitay.ai</a>
       </footer>
     </div>
   );

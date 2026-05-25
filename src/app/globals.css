@@ -40,21 +40,64 @@ body {
   font-family: var(--font-rubik), system-ui, sans-serif;
 }
 
-/* Smooth transitions for theme changes */
-*, *::before, *::after {
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.1s ease;
+/* ─── Dark mode global background overrides ────────────────── */
+/* These catch any elements that use standard Tailwind bg classes
+   without explicit dark: variants */
+
+html.dark body {
+  background-color: #0f0f0f;
+  color: #f5f5f5;
 }
 
-/* Exceptions: don't animate things that look bad animated */
-svg, img, button svg, a svg { transition: none !important; }
+/* Catch-all for white/light cards that miss dark: variants */
+.dark .bg-white {
+  background-color: #171717 !important;
+}
 
-/* Fix for date/time inputs in dark mode */
+.dark .bg-gray-50 {
+  background-color: #111111 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Text adjustments */
+.dark .text-gray-900 {
+  color: #f0f0f0 !important;
+}
+
+.dark .text-gray-800 {
+  color: #e5e5e5 !important;
+}
+
+.dark .text-gray-700 {
+  color: #d1d1d1 !important;
+}
+
+.dark .text-gray-600 {
+  color: #a3a3a3 !important;
+}
+
+/* Border adjustments */
+.dark .border-gray-200 {
+  border-color: #2a2a2a !important;
+}
+
+.dark .border-gray-300 {
+  border-color: #3a3a3a !important;
+}
+
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2a2a2a !important;
+}
+
+/* ─── Form elements in dark mode ──────────────────────────── */
 .dark input[type="date"],
 .dark input[type="time"] {
   color-scheme: dark;
 }
 
-/* Dark mode: fix select elements */
 .dark select {
   color-scheme: dark;
   background-color: #1f1f1f;
@@ -62,8 +105,14 @@ svg, img, button svg, a svg { transition: none !important; }
   border-color: #3a3a3a;
 }
 
-/* Dark mode: fix all inputs */
-.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"])[class*="bg-white"],
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="bg-"]) {
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  border-color: #3a3a3a;
+}
+
+.dark textarea:not([class*="bg-"]) {
   background-color: #1f1f1f;
   color: #f5f5f5;
   border-color: #3a3a3a;
@@ -74,46 +123,40 @@ svg, img, button svg, a svg { transition: none !important; }
   color: #555;
 }
 
-/* Dark mode: textarea */
-.dark textarea {
-  background-color: #1f1f1f;
-  color: #f5f5f5;
-  border-color: #3a3a3a;
-}
-
-/* Dark mode body */
-html.dark body {
-  background-color: #0f0f0f;
-  color: #f5f5f5;
-}
-
-/* Tables in dark mode */
+/* ─── Tables in dark mode ──────────────────────────────────── */
 .dark table {
   color: #e5e5e5;
 }
 
+.dark thead {
+  background-color: rgba(255,255,255,0.03);
+}
+
 .dark th {
   color: #a3a3a3;
-  background-color: rgba(255,255,255,0.03);
 }
 
 .dark td {
   border-color: #2a2a2a;
 }
 
-/* Cards and panels */
-.dark .rounded-lg,
-.dark .rounded-xl {
-  color: inherit;
+/* ─── Smooth transitions ────────────────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.1s ease;
 }
 
-/* Better focus styles */
+/* No animations on SVG/icons */
+svg, img, button svg, a svg, .no-transition {
+  transition: none !important;
+}
+
+/* ─── Focus styles ──────────────────────────────────────────── */
 *:focus-visible {
   outline: 2px solid rgb(59 130 246);
   outline-offset: 2px;
 }
 
-/* Scrollbar styling for dark mode */
+/* ─── Scrollbar styling ─────────────────────────────────────── */
 .dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -132,31 +175,24 @@ html.dark body {
   background: #404040;
 }
 
-/* Animation for mobile menu */
+/* ─── Shadows in dark mode ──────────────────────────────────── */
+.dark .shadow,
+.dark .shadow-md,
+.dark .shadow-sm {
+  box-shadow: none;
+}
+
+/* ─── Animation utilities ───────────────────────────────────── */
 @keyframes slide-in-from-top-2 {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-in {
-  animation-fill-mode: both;
-}
+.animate-in { animation-fill-mode: both; }
+.slide-in-from-top-2 { animation-name: slide-in-from-top-2; }
+.duration-200 { animation-duration: 200ms; }
 
-.slide-in-from-top-2 {
-  animation-name: slide-in-from-top-2;
-}
-
-.duration-200 {
-  animation-duration: 200ms;
-}
-
-/* Line clamp utility */
+/* ─── Line clamp utilities ──────────────────────────────────── */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -171,21 +207,6 @@ html.dark body {
   overflow: hidden;
 }
 
-/* RTL-specific utilities */
-[dir="rtl"] .text-start {
-  text-align: right;
-}
-
-[dir="rtl"] .text-end {
-  text-align: left;
-}
-
-/* Dark mode for auth pages */
-.dark .bg-background {
-  background-color: #0f0f0f;
-}
-
-/* Status badges consistent dark mode */
-.dark .bg-gray-100 {
-  background-color: rgba(255,255,255,0.06);
-}
+/* ─── RTL utilities ─────────────────────────────────────────── */
+[dir="rtl"] .text-start { text-align: right; }
+[dir="rtl"] .text-end { text-align: left; }
