@@ -55,8 +55,7 @@ export default async function DashboardLayout({
                     {org?.name ?? "מערכת שיווק"}
                   </span>
                   <a href="https://nitay.ai" target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-400 dark:text-blue-500 hover:underline"
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    className="text-[10px] text-blue-400 dark:text-blue-500 hover:underline">
                     By nitay.ai
                   </a>
                 </div>
