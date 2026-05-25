@@ -9,8 +9,8 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "מערכת עירונית",
-  description: "מערכת ניהול פנימית לעירייה",
+  title: "מערכת שיווק",
+  description: "מערכת ניהול תוכן ושיווק",
 };
 
 export default function RootLayout({
