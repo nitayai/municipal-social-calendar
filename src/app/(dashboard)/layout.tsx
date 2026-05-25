@@ -3,7 +3,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileMenu } from "@/components/ui/mobile-menu";
-import { getOrgForCurrentUser } from "@/lib/actions/admin";
+import { OrgSwitcher } from "@/components/ui/org-switcher";
+import { getOrgForCurrentUser, getOrganizations } from "@/lib/actions/admin";
+import { getActiveOrgId } from "@/lib/actions/org";
 import type { UserRole } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +29,17 @@ export default async function DashboardLayout({
     .single<{ role: UserRole }>();
 
   const isSuperAdmin = profile?.role === "super_admin";
-  const isManager = profile?.role === "manager" || isSuperAdmin;
 
   const org = await getOrgForCurrentUser();
+
+  // For super admin: load all orgs + active org
+  let allOrgs: import("@/lib/actions/admin").Organization[] = [];
+  let activeOrgId: string | null = null;
+  if (isSuperAdmin) {
+    const { data: orgsData } = await getOrganizations();
+    allOrgs = orgsData ?? [];
+    activeOrgId = await getActiveOrgId() ?? org?.id ?? null;
+  }
 
   const navLinks = [
     { href: "/posts", label: "פוסטים" },
@@ -39,9 +49,11 @@ export default async function DashboardLayout({
     ...(isSuperAdmin ? [{ href: "/admin", label: "ניהול מערכת" }] : []),
   ];
 
+  const displayName = org?.name ?? "מערכת שיווק";
+
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-[#0f0f0f]">
-      <header className="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/80 dark:bg-[#0f0f0f]/80 backdrop-blur-sm sticky top-0 z-40">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0f0f0f]">
+      <header className="border-b border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#141414] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-4 sm:gap-6">
@@ -52,7 +64,7 @@ export default async function DashboardLayout({
                 ) : null}
                 <div className="flex flex-col leading-tight">
                   <span className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {org?.name ?? "מערכת שיווק"}
+                    {displayName}
                   </span>
                   <a href="https://nitay.ai" target="_blank" rel="noopener noreferrer"
                     className="text-[10px] text-blue-400 dark:text-blue-500 hover:underline">
@@ -60,6 +72,12 @@ export default async function DashboardLayout({
                   </a>
                 </div>
               </Link>
+
+              {/* Org switcher for super admin */}
+              {isSuperAdmin && allOrgs.length > 1 && (
+                <OrgSwitcher orgs={allOrgs} activeOrgId={activeOrgId} />
+              )}
+
               {/* Desktop navigation */}
               <nav className="hidden md:flex gap-5">
                 {navLinks.map((link) => (
@@ -77,6 +95,7 @@ export default async function DashboardLayout({
                 ))}
               </nav>
             </div>
+
             {/* Desktop actions */}
             <div className="hidden md:flex items-center gap-4">
               <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[180px]">
@@ -92,6 +111,7 @@ export default async function DashboardLayout({
                 </button>
               </form>
             </div>
+
             {/* Mobile actions */}
             <div className="flex md:hidden items-center gap-2">
               <ThemeToggle />

@@ -2,19 +2,39 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId } from "@/lib/actions/org";
 import type { Post, PostInsert, PostUpdate, PostAttachment, PostAttachmentInsert, UserRole } from "@/types";
 
 type PostsResult = { data: Post[] | null; error: string | null };
 type PostResult = { data: Post | null; error: string | null };
 type AttachmentsResult = { data: PostAttachment[] | null; error: string | null };
 
+// Returns the org_id to filter by for this user.
+// For super_admin: uses the active org cookie.
+// For regular users: RLS handles it automatically (pass null = no extra filter).
+async function getFilterOrgId(): Promise<{ orgId: string | null; isSuperAdmin: boolean }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { orgId: null, isSuperAdmin: false };
+  const { data: profile } = await supabase.from("profiles")
+    .select("role, organization_id").eq("id", user.id)
+    .single<{ role: string; organization_id: string | null }>();
+  if (!profile) return { orgId: null, isSuperAdmin: false };
+  if (profile.role === "super_admin") {
+    const activeOrgId = await getActiveOrgId();
+    return { orgId: activeOrgId ?? profile.organization_id, isSuperAdmin: true };
+  }
+  return { orgId: null, isSuperAdmin: false }; // RLS handles regular users
+}
+
 export async function getPosts(): Promise<PostsResult> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("posts").select("*")
+  const { orgId, isSuperAdmin } = await getFilterOrgId();
+  let query = supabase.from("posts").select("*")
     .order("scheduled_date", { ascending: true })
-    .order("scheduled_time", { ascending: true })
-    .returns<Post[]>();
+    .order("scheduled_time", { ascending: true });
+  if (isSuperAdmin && orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query.returns<Post[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
 }
@@ -22,11 +42,12 @@ export async function getPosts(): Promise<PostsResult> {
 export async function getActivePosts(): Promise<PostsResult> {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
-  const { data, error } = await supabase
-    .from("posts").select("*")
+  const { orgId, isSuperAdmin } = await getFilterOrgId();
+  let query = supabase.from("posts").select("*")
     .gte("scheduled_date", today)
-    .order("updated_at", { ascending: false })
-    .returns<Post[]>();
+    .order("updated_at", { ascending: false });
+  if (isSuperAdmin && orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query.returns<Post[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
 }
@@ -34,11 +55,12 @@ export async function getActivePosts(): Promise<PostsResult> {
 export async function getArchivedPosts(): Promise<PostsResult> {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
-  const { data, error } = await supabase
-    .from("posts").select("*")
+  const { orgId, isSuperAdmin } = await getFilterOrgId();
+  let query = supabase.from("posts").select("*")
     .lt("scheduled_date", today)
-    .order("scheduled_date", { ascending: false })
-    .returns<Post[]>();
+    .order("scheduled_date", { ascending: false });
+  if (isSuperAdmin && orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query.returns<Post[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
 }
@@ -79,19 +101,25 @@ export async function getPostsByMonth(year: number, month: number): Promise<Post
   const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month + 1, 0).getDate();
   const endDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-  const { data, error } = await supabase.from("posts").select("*")
+  const { orgId, isSuperAdmin } = await getFilterOrgId();
+  let query = supabase.from("posts").select("*")
     .gte("scheduled_date", startDate).lte("scheduled_date", endDate)
-    .order("scheduled_time", { ascending: true }).returns<Post[]>();
+    .order("scheduled_time", { ascending: true });
+  if (isSuperAdmin && orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query.returns<Post[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
 }
 
 export async function getPostsByDateRange(startDate: string, endDate: string): Promise<PostsResult> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("posts").select("*")
+  const { orgId, isSuperAdmin } = await getFilterOrgId();
+  let query = supabase.from("posts").select("*")
     .gte("scheduled_date", startDate).lte("scheduled_date", endDate)
     .order("scheduled_date", { ascending: true })
-    .order("scheduled_time", { ascending: true }).returns<Post[]>();
+    .order("scheduled_time", { ascending: true });
+  if (isSuperAdmin && orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query.returns<Post[]>();
   if (error) return { data: null, error: error.message };
   return { data, error: null };
 }
@@ -134,12 +162,20 @@ export async function createPost(post: Omit<PostInsert, "created_by">): Promise<
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: "Not authenticated" };
   const { data: profile } = await supabase.from("profiles")
-    .select("organization_id, full_name").eq("id", user.id)
-    .single<{ organization_id: string | null; full_name: string | null }>();
+    .select("organization_id, full_name, role").eq("id", user.id)
+    .single<{ organization_id: string | null; full_name: string | null; role: string }>();
+
+  // For super_admin: use the active org cookie
+  let orgId = profile?.organization_id ?? null;
+  if (profile?.role === "super_admin") {
+    const activeOrgId = await getActiveOrgId();
+    if (activeOrgId) orgId = activeOrgId;
+  }
+
   const insertData: PostInsert = {
     ...post,
     created_by: user.id,
-    organization_id: profile?.organization_id ?? null,
+    organization_id: orgId,
     created_by_name: profile?.full_name || user.email || null,
   };
   const { data, error } = await supabase.from("posts").insert(insertData as never).select().single<Post>();

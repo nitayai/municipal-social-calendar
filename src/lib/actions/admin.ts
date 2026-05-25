@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrgId } from "@/lib/actions/org";
 
 export type Organization = {
   id: string;
@@ -97,14 +98,32 @@ export async function updateProfile(id: string, updates: { role?: string; organi
   } catch (e: unknown) { return { error: (e as Error).message }; }
 }
 
-export async function getOrgForCurrentUser(): Promise<{ name: string | null; logo_url: string | null } | null> {
+export async function getOrgForCurrentUser(): Promise<{ id: string; name: string | null; logo_url: string | null } | null> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single<{ organization_id: string | null }>();
-    if (!profile?.organization_id) return null;
-    const { data: org } = await supabase.from("organizations").select("name, logo_url").eq("id", profile.organization_id).single<{ name: string; logo_url: string | null }>();
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id, role")
+      .eq("id", user.id)
+      .single<{ organization_id: string | null; role: string }>();
+    if (!profile) return null;
+
+    // For super_admin: use active org from cookie if set
+    let orgId = profile.organization_id;
+    if (profile.role === "super_admin") {
+      const activeOrgId = await getActiveOrgId();
+      if (activeOrgId) orgId = activeOrgId;
+    }
+
+    if (!orgId) return null;
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id, name, logo_url")
+      .eq("id", orgId)
+      .single<{ id: string; name: string; logo_url: string | null }>();
     return org ?? null;
   } catch { return null; }
 }
