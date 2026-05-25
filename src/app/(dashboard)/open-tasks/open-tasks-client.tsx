@@ -63,7 +63,7 @@ export function OpenTasksClient({ initialTasks, error }: OpenTasksClientProps) {
   };
 
   const handleStartEdit = (task: OpenTask) => {
-    setEditState({ id: task.id, title: task.title, notes: task.notes || "", priority: task.priority });
+    setEditState({ id: task.id, title: task.title, notes: task.notes || "", priority: task.priority ?? "normal" });
   };
 
   const handleSaveEdit = async () => {
@@ -175,7 +175,7 @@ export function OpenTasksClient({ initialTasks, error }: OpenTasksClientProps) {
             <div key={task.id}
               className={`bg-white dark:bg-[#141414] rounded-xl border transition-all ${
                 deletingId === task.id ? "opacity-50" : ""
-              } ${task.priority === "high" ? "border-red-200 dark:border-red-900" : "border-gray-200 dark:border-[#2a2a2a]"}`}>
+              } ${(task.priority ?? "normal") === "high" ? "border-red-200 dark:border-red-900" : "border-gray-200 dark:border-[#2a2a2a]"}`}>
 
               {editState?.id === task.id ? (
                 /* Edit mode */
@@ -211,8 +211,8 @@ export function OpenTasksClient({ initialTasks, error }: OpenTasksClientProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 flex-wrap">
                       <span className="font-medium text-gray-900 dark:text-gray-100 leading-snug">{task.title}</span>
-                      <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${PRIORITY_STYLES[task.priority].chip}`}>
-                        {PRIORITY_STYLES[task.priority].label}
+                      <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${PRIORITY_STYLES[task.priority ?? "normal"].chip}`}>
+                        {PRIORITY_STYLES[task.priority ?? "normal"].label}
                       </span>
                     </div>
                     {task.notes && (

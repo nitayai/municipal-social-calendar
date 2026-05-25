@@ -1,8 +1,10 @@
+"use server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileMenu } from "@/components/ui/mobile-menu";
+import { getOrgForCurrentUser } from "@/lib/actions/admin";
 import type { UserRole } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -25,13 +27,17 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single<{ role: UserRole }>();
 
-  const isManager = profile?.role === "manager" || profile?.role === "super_admin";
+  const isSuperAdmin = profile?.role === "super_admin";
+  const isManager = profile?.role === "manager" || isSuperAdmin;
+
+  const org = await getOrgForCurrentUser();
 
   const navLinks = [
     { href: "/posts", label: "פוסטים" },
     { href: "/calendar", label: "גאנט פרסומים" },
     { href: "/open-tasks", label: "רעיונות ומשימות" },
     { href: "/settings/departments", label: "ניהול מחלקות" },
+    ...(isSuperAdmin ? [{ href: "/admin", label: "ניהול מערכת" }] : []),
   ];
 
   return (
@@ -39,17 +45,34 @@ export default async function DashboardLayout({
       <header className="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/80 dark:bg-[#0f0f0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-4 sm:gap-8">
-              <Link href="/dashboard/home" className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                מערכת עירונית
+            <div className="flex items-center gap-4 sm:gap-6">
+              {/* Brand + org */}
+              <Link href="/dashboard/home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity shrink-0">
+                {org?.logo_url ? (
+                  <img src={org.logo_url} alt={org.name ?? ""} className="h-8 w-auto max-w-[80px] object-contain rounded" />
+                ) : null}
+                <div className="flex flex-col leading-tight">
+                  <span className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {org?.name ?? "מערכת שיווק"}
+                  </span>
+                  <a href="https://nitay.ai" target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] text-blue-400 dark:text-blue-500 hover:underline"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    By nitay.ai
+                  </a>
+                </div>
               </Link>
               {/* Desktop navigation */}
-              <nav className="hidden md:flex gap-6">
+              <nav className="hidden md:flex gap-5">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    className={`text-sm transition-colors ${
+                      link.href === "/admin"
+                        ? "text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    }`}
                   >
                     {link.label}
                   </Link>

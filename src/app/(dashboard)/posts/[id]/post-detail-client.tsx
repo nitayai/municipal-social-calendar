@@ -463,6 +463,13 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
             className="px-3 py-1.5 text-xs border border-gray-200 dark:border-[#3a3a3a] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center gap-1">
             {copied ? "✓ הועתק" : "העתק טקסט"}
           </button>
+          <button type="button" onClick={() => router.push(`/posts/new?from=${post.id}`)}
+            className="px-3 py-1.5 text-xs border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+            </svg>
+            שכפל
+          </button>
         </div>
       </div>
 
@@ -559,7 +566,31 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
 
             {/* Attachments section */}
             <div>
-              <label className="block text-sm font-medium mb-2">קבצים וקישורים</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">קבצים וקישורים</label>
+                {attachments.filter(a => a.type === "upload").length > 1 && (
+                  <button type="button"
+                    onClick={() => {
+                      attachments.filter(a => a.type === "upload").forEach((att, i) => {
+                        setTimeout(() => {
+                          const a = document.createElement("a");
+                          a.href = att.url;
+                          a.download = att.name || att.url.split("/").pop()?.split("?")[0] || `file_${i + 1}`;
+                          a.target = "_blank";
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }, i * 500);
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs border border-gray-200 dark:border-[#3a3a3a] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    הורד הכל ({attachments.filter(a => a.type === "upload").length})
+                  </button>
+                )}
+              </div>
 
               {/* Existing attachments */}
               {attachments.length > 0 && (

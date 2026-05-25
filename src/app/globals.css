@@ -41,9 +41,12 @@ body {
 }
 
 /* Smooth transitions for theme changes */
-html {
-  transition: color-scheme 0.2s;
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.1s ease;
 }
+
+/* Exceptions: don't animate things that look bad animated */
+svg, img, button svg, a svg { transition: none !important; }
 
 /* Fix for date/time inputs in dark mode */
 .dark input[type="date"],
@@ -54,22 +57,54 @@ html {
 /* Dark mode: fix select elements */
 .dark select {
   color-scheme: dark;
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  border-color: #3a3a3a;
 }
 
-/* Dark mode: ensure backgrounds are consistent */
-.dark .bg-white {
-  background-color: var(--surface);
+/* Dark mode: fix all inputs */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  border-color: #3a3a3a;
 }
 
-/* Dark mode: fix gray backgrounds that don't specify dark variant */
-.dark .bg-gray-50 {
-  background-color: #111111;
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #555;
+}
+
+/* Dark mode: textarea */
+.dark textarea {
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  border-color: #3a3a3a;
 }
 
 /* Dark mode body */
 html.dark body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: #0f0f0f;
+  color: #f5f5f5;
+}
+
+/* Tables in dark mode */
+.dark table {
+  color: #e5e5e5;
+}
+
+.dark th {
+  color: #a3a3a3;
+  background-color: rgba(255,255,255,0.03);
+}
+
+.dark td {
+  border-color: #2a2a2a;
+}
+
+/* Cards and panels */
+.dark .rounded-lg,
+.dark .rounded-xl {
+  color: inherit;
 }
 
 /* Better focus styles */
@@ -85,11 +120,11 @@ html.dark body {
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: #0f0f0f;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: #2a2a2a;
   border-radius: 4px;
 }
 
@@ -143,4 +178,14 @@ html.dark body {
 
 [dir="rtl"] .text-end {
   text-align: left;
+}
+
+/* Dark mode for auth pages */
+.dark .bg-background {
+  background-color: #0f0f0f;
+}
+
+/* Status badges consistent dark mode */
+.dark .bg-gray-100 {
+  background-color: rgba(255,255,255,0.06);
 }

@@ -50,6 +50,7 @@ export default function NewPostPage() {
   const searchParams = useSearchParams();
   const prefillDate = searchParams.get("date") ?? "";
   const prefillPlatform = searchParams.get("platform") as PostPlatform | null;
+  const cloneFromId = searchParams.get("from");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,11 @@ export default function NewPostPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<PostPlatform[]>(
     prefillPlatform ? [prefillPlatform] : []
   );
+  const [isClone, setIsClone] = useState(false);
+
+  // Scheduling
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState("");
 
   // Attachment state
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
@@ -82,20 +88,39 @@ export default function NewPostPage() {
     async function loadData() {
       try {
         const { getDepartments, ensureDefaultDepartment } = await import("@/lib/actions/departments");
-        const { getCurrentUserRole } = await import("@/lib/actions/posts");
+        const { getCurrentUserRole, getPost } = await import("@/lib/actions/posts");
         await ensureDefaultDepartment();
-        const [{ data }, role] = await Promise.all([getDepartments(), getCurrentUserRole()]);
-        if (data) {
-          setDepartments(data);
-          const defaultDept = data.find((d) => d.is_default);
-          if (defaultDept) setFormData(prev => ({ ...prev, department_id: defaultDept.id }));
+        const [{ data: depts }, role] = await Promise.all([getDepartments(), getCurrentUserRole()]);
+        if (depts) {
+          setDepartments(depts);
+          if (!cloneFromId) {
+            const defaultDept = depts.find((d) => d.is_default);
+            if (defaultDept) setFormData(prev => ({ ...prev, department_id: defaultDept.id }));
+          }
         }
         setUserRole(role);
+
+        // Clone mode: pre-fill from existing post
+        if (cloneFromId) {
+          const { data: sourcePost } = await getPost(cloneFromId);
+          if (sourcePost) {
+            setIsClone(true);
+            setSelectedPlatforms(sourcePost.platforms ?? []);
+            setFormData({
+              department_id: sourcePost.department_id || (depts?.find(d => d.is_default)?.id ?? ""),
+              scheduled_date: prefillDate || "",
+              scheduled_time: sourcePost.scheduled_time || "",
+              title: sourcePost.title ? `${sourcePost.title} (עותק)` : "",
+              content: sourcePost.content || "",
+              notes: sourcePost.notes || "",
+            });
+          }
+        }
       } catch { /* ignore */ }
       finally { setLoadingDepartments(false); }
     }
     loadData();
-  }, []);
+  }, [cloneFromId, prefillDate]);
 
   const isManager = userRole === "manager" || userRole === "super_admin";
 
@@ -156,7 +181,7 @@ export default function NewPostPage() {
 
     try {
       const selectedDept = departments.find(d => d.id === formData.department_id);
-      const { createPost } = await import("@/lib/actions/posts");
+      const { createPost, updateScheduled } = await import("@/lib/actions/posts");
 
       const { data: newPost, error: createError } = await createPost({
         department: selectedDept?.name || "כללי",
@@ -174,6 +199,11 @@ export default function NewPostPage() {
         setError(createError || "שגיאה ביצירת הפוסט");
         setLoading(false);
         return;
+      }
+
+      // Set scheduling if enabled
+      if (isScheduled && scheduledTime) {
+        await updateScheduled(newPost.id, true, scheduledTime);
       }
 
       // Upload pending attachments
@@ -214,7 +244,8 @@ export default function NewPostPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <h1 className="text-xl sm:text-2xl font-bold">פוסט חדש</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">{isClone ? "שכפול פוסט" : "פוסט חדש"}</h1>
+        {isClone && <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full">עותק</span>}
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -297,11 +328,31 @@ export default function NewPostPage() {
               placeholder="הערה פנימית על הפוסט..." />
           </div>
 
+          {/* Scheduling */}
+          <div className="p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="is_scheduled" checked={isScheduled}
+                onChange={e => setIsScheduled(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 dark:border-[#3a3a3a] text-blue-600 focus:ring-blue-500" />
+              <label htmlFor="is_scheduled" className="text-sm font-medium cursor-pointer select-none">
+                תזמן בפלטפורמה
+              </label>
+              <span className="text-xs text-gray-400">(סמן אם הפוסט כבר תוזמן בפייסבוק/אינסטגרם)</span>
+            </div>
+            {isScheduled && (
+              <div className="mt-2">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">שעת תזמון בפלטפורמה</label>
+                <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
+                  dir="ltr"
+                  className="w-36 px-3 py-1.5 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            )}
+          </div>
+
           {/* Attachments */}
           <div>
             <label className="block text-sm font-medium mb-2">קבצים וקישורים <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
 
-            {/* Pending attachments list */}
             {pendingAttachments.length > 0 && (
               <div className="space-y-1.5 mb-3 p-3 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">
                 {pendingAttachments.map((att, idx) => (
