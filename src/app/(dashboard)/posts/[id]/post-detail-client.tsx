@@ -755,7 +755,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
                   <span className="text-gray-400 shrink-0">נוצר על ידי</span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">{post.created_by_name}</span>
                   {post.created_at && (
-                    <span className="text-gray-400 text-xs mr-auto">{new Date(post.created_at).toLocaleDateString("he-IL")}</span>
+                    <span className="text-gray-400 text-xs mr-auto">{new Date(post.created_at).toLocaleDateString("he-IL")} {new Date(post.created_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}</span>
                   )}
                 </div>
               )}
