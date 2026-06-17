@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/actions/org";
-import type { Post, PostInsert, PostUpdate, PostAttachment, PostAttachmentInsert, UserRole } from "@/types";
+import type { Post, PostInsert, PostUpdate, PostAttachment, PostAttachmentInsert, UserRole, PostHistory } from "@/types";
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "טיוטה",
+  pending_approval: "ממתין לאישור",
+  approved: "מאושר",
+  published: "פורסם",
+  rejected: "נדחה",
+};
 
 type PostsResult = { data: Post[] | null; error: string | null };
 type PostResult = { data: Post | null; error: string | null };
@@ -186,12 +194,46 @@ export async function createPost(post: Omit<PostInsert, "created_by">): Promise<
 
 export async function updatePost(id: string, updates: PostUpdate): Promise<PostResult> {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let userName: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles")
+      .select("full_name").eq("id", user.id).single<{ full_name: string | null }>();
+    userName = profile?.full_name || user.email || null;
+  }
   const { data, error } = await supabase.from("posts").update(updates as never)
     .eq("id", id).select().single<Post>();
   if (error) return { data: null, error: error.message };
+  if (user) {
+    const action = updates.status
+      ? `שינוי סטטוס → ${STATUS_LABELS[updates.status as string] || updates.status}`
+      : "עדכון פוסט";
+    await supabase.from("post_history").insert({
+      post_id: id, user_id: user.id, user_name: userName, action,
+    } as never);
+  }
   revalidatePath("/posts");
   revalidatePath(`/posts/${id}`);
   return { data, error: null };
+}
+
+export async function getPostHistory(postId: string): Promise<{ data: PostHistory[] | null; error: string | null }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("post_history").select("*")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: false })
+    .returns<PostHistory[]>();
+  if (error) return { data: null, error: error.message };
+  return { data, error: null };
+}
+
+export async function updatePublishedUrl(postId: string, url: string | null): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("posts").update({ published_url: url } as never).eq("id", postId);
+  if (error) return { error: error.message };
+  revalidatePath(`/posts/${postId}`);
+  return { error: null };
 }
 
 export async function deletePost(id: string): Promise<{ error: string | null }> {

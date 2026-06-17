@@ -6,7 +6,7 @@ import Link from "next/link";
 import { PLATFORMS, getPlatformLabel } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DeletePostButton } from "@/components/ui/delete-post-button";
-import type { Post, PostAttachment, PostPlatform, Department } from "@/types";
+import type { Post, PostAttachment, PostPlatform, Department, PostHistory } from "@/types";
 
 // ─── Platform styles ────────────────────────────────────────────────────────────
 
@@ -108,7 +108,7 @@ function AttachmentPreview({ att, onDelete, canDelete }: { att: PostAttachment; 
 
 // ─── Preview ─────────────────────────────────────────────────────────────────────
 
-function SocialPostPreview({ post, attachments }: { post: Post; attachments: PostAttachment[] }) {
+function SocialPostPreview({ post, attachments, orgName }: { post: Post; attachments: PostAttachment[]; orgName: string | null }) {
   const ph = PLATFORM_HEADER[post.platforms?.[0] ?? "facebook"] ?? PLATFORM_HEADER.facebook;
   const uploadedFiles = attachments.filter(a => a.type === "upload");
   const links = attachments.filter(a => a.type === "link");
@@ -132,7 +132,7 @@ function SocialPostPreview({ post, attachments }: { post: Post; attachments: Pos
           </svg>
         </div>
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">עיריית יהוד-מונוסון</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{orgName || "הארגון"}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{post.department} · {post.scheduled_date} {post.scheduled_time.slice(0, 5)}</div>
         </div>
       </div>
@@ -201,9 +201,11 @@ interface PostDetailClientProps {
   post: Post;
   isManager: boolean;
   initialAttachments: PostAttachment[];
+  orgName: string | null;
+  initialHistory: PostHistory[];
 }
 
-export function PostDetailClient({ post, isManager, initialAttachments }: PostDetailClientProps) {
+export function PostDetailClient({ post, isManager, initialAttachments, orgName, initialHistory }: PostDetailClientProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -225,6 +227,24 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
   const [newLinkName, setNewLinkName] = useState("");
   const [showAddLink, setShowAddLink] = useState(false);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
+
+  // History & published URL
+  const [history, setHistory] = useState<PostHistory[]>(initialHistory);
+  const [publishedUrl, setPublishedUrl] = useState<string>(post.published_url ?? "");
+  const [savingUrl, setSavingUrl] = useState(false);
+  const [urlSaved, setUrlSaved] = useState(false);
+
+  const isPastPublished = post.scheduled_date < new Date().toISOString().split("T")[0];
+
+  async function handleSavePublishedUrl() {
+    setSavingUrl(true);
+    try {
+      const { updatePublishedUrl } = await import("@/lib/actions/posts");
+      await updatePublishedUrl(post.id, publishedUrl.trim() || null);
+      setUrlSaved(true);
+      setTimeout(() => setUrlSaved(false), 2000);
+    } finally { setSavingUrl(false); }
+  }
 
   const canEdit = post.status === "draft" || (isManager && post.status === "pending_approval");
   const canApprove = isManager && post.status === "pending_approval";
@@ -743,7 +763,7 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
         <div className="space-y-4">
           <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-6">
             <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">תצוגה מקדימה</h2>
-            <SocialPostPreview post={{ ...post, ...formData }} attachments={attachments} />
+            <SocialPostPreview post={{ ...post, ...formData }} attachments={attachments} orgName={orgName} />
           </div>
 
           {/* Post meta: who created / approved / scheduled */}
@@ -780,6 +800,62 @@ export function PostDetailClient({ post, isManager, initialAttachments }: PostDe
               </div>
             </div>
           </div>
+
+          {/* Published URL */}
+          {isPastPublished && (
+            <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-5">
+              <h2 className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">קישור לפוסט המקורי</h2>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={publishedUrl}
+                  onChange={e => setPublishedUrl(e.target.value)}
+                  placeholder="https://facebook.com/..."
+                  dir="ltr"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#3a3a3a] rounded-lg bg-gray-50 dark:bg-white/[0.04] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleSavePublishedUrl}
+                  disabled={savingUrl}
+                  className="px-3 py-2 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 shrink-0"
+                >
+                  {urlSaved ? "✓ נשמר" : savingUrl ? "..." : "שמור"}
+                </button>
+              </div>
+              {publishedUrl && (
+                <a href={publishedUrl} target="_blank" rel="noopener noreferrer"
+                  className="mt-2 flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  פתח קישור
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* History */}
+          {history.length > 0 && (
+            <div className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-4 sm:p-5">
+              <h2 className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">היסטוריית עדכונים</h2>
+              <div className="space-y-2">
+                {history.map(h => (
+                  <div key={h.id} className="flex items-start gap-2 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 mt-1.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{h.user_name || "משתמש"}</span>
+                      <span className="text-gray-400 dark:text-gray-500 mx-1">—</span>
+                      <span className="text-gray-600 dark:text-gray-400">{h.action}</span>
+                    </div>
+                    <span className="text-gray-400 dark:text-gray-600 shrink-0 tabular-nums" dir="ltr">
+                      {new Date(h.created_at).toLocaleDateString("he-IL")} {new Date(h.created_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

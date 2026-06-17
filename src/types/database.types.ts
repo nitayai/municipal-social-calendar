@@ -30,6 +30,7 @@ export interface Database {
           notes: string | null; created_by_name: string | null;
           approved_by: string | null; approved_by_name: string | null;
           scheduled_by_name: string | null;
+          published_url: string | null;
           created_at: string; updated_at: string;
         };
         Insert: {
@@ -52,6 +53,7 @@ export interface Database {
           notes?: string | null; created_by_name?: string | null;
           approved_by?: string | null; approved_by_name?: string | null;
           scheduled_by_name?: string | null;
+          published_url?: string | null;
           created_at?: string; updated_at?: string;
         };
       };
@@ -94,6 +96,15 @@ export type DepartmentInsert = {
   is_default?: boolean;
   created_at?: string;
   updated_at?: string;
+};
+
+export type PostHistory = {
+  id: string;
+  post_id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: string;
+  created_at: string;
 };
 
 export type DepartmentUpdate = {
