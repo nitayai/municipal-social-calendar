@@ -120,6 +120,15 @@ export type PostHistory = {
   created_at: string;
 };
 
+export type OpenTaskHistory = {
+  id: string;
+  task_id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: string;
+  created_at: string;
+};
+
 export type DepartmentUpdate = {
   id?: string;
   organization_id?: string | null;
