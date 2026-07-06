@@ -234,7 +234,7 @@ export function PostDetailClient({ post, isManager, initialAttachments, orgName,
   const [savingUrl, setSavingUrl] = useState(false);
   const [urlSaved, setUrlSaved] = useState(false);
 
-  const isPastPublished = post.scheduled_date < new Date().toISOString().split("T")[0];
+  const isPastPublished = post.is_scheduled;
 
   async function handleSavePublishedUrl() {
     setSavingUrl(true);
@@ -749,11 +749,17 @@ export function PostDetailClient({ post, isManager, initialAttachments, orgName,
               </div>
             )}
 
-            {/* Approval comment display */}
-            {post.approval_comment && !canApprove && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">הערת מנהל:</p>
-                <p className="text-sm text-amber-800 dark:text-amber-300">{post.approval_comment}</p>
+            {/* Approval comment display — marker highlight */}
+            {post.approval_comment && (
+              <div className="relative p-3 rounded-lg border-r-4 border-yellow-400 dark:border-yellow-500"
+                style={{ background: "linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)" }}>
+                <p className="text-xs font-bold text-yellow-800 mb-1 flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                  </svg>
+                  הערת מנהל:
+                </p>
+                <p className="text-sm font-medium text-yellow-900">{post.approval_comment}</p>
               </div>
             )}
           </div>
