@@ -88,9 +88,11 @@ export default async function DashboardLayout({
                 </div>
               </Link>
 
-              {/* Org switcher for super admin */}
+              {/* Org switcher for super admin — desktop only */}
               {isSuperAdmin && allOrgs.length > 1 && (
-                <OrgSwitcher orgs={allOrgs} activeOrgId={activeOrgId} />
+                <div className="hidden md:flex">
+                  <OrgSwitcher orgs={allOrgs} activeOrgId={activeOrgId} />
+                </div>
               )}
 
               {/* Desktop nav */}
@@ -131,7 +133,12 @@ export default async function DashboardLayout({
             {/* Mobile */}
             <div className="flex md:hidden items-center gap-2">
               <ThemeToggle />
-              <MobileMenu links={navLinks} userEmail={user.email || ""} />
+              <MobileMenu
+                links={navLinks}
+                userEmail={user.email || ""}
+                orgs={isSuperAdmin && allOrgs.length > 1 ? allOrgs : undefined}
+                activeOrgId={isSuperAdmin ? activeOrgId : undefined}
+              />
             </div>
           </div>
         </div>

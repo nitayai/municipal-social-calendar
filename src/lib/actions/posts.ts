@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrgId } from "@/lib/actions/org";
+import { notifyPostApproved } from "@/lib/email";
 import type { Post, PostInsert, PostUpdate, PostAttachment, PostAttachmentInsert, UserRole, PostHistory } from "@/types";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -289,12 +290,32 @@ export async function approvePost(id: string, comment?: string): Promise<PostRes
   const profile = profileRes.data;
   if (!profile || !["manager", "super_admin"].includes(profile.role))
     return { data: null, error: "Unauthorized" };
-  return updatePost(id, {
+
+  const result = await updatePost(id, {
     status: "approved",
     approval_comment: comment || null,
     approved_by: user.id,
     approved_by_name: profile.full_name || user.email || null,
   });
+
+  if (!result.error && result.data) {
+    const post = result.data;
+    // Fetch org name for notification
+    const orgRes = post.organization_id
+      ? await supabase.from("organizations").select("name").eq("id", post.organization_id).single<{ name: string }>()
+      : null;
+    const orgName = orgRes?.data?.name ?? "הארגון";
+    const approverName = profile.full_name || user.email || "מנהל";
+    notifyPostApproved({
+      postId: id,
+      postTitle: post.title,
+      postContent: post.content,
+      approverName,
+      orgName,
+    }).catch(console.error);
+  }
+
+  return result;
 }
 
 export async function rejectPost(id: string, comment: string): Promise<PostResult> {

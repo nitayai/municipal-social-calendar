@@ -258,6 +258,8 @@ export function PostDetailClient({ post, isManager, initialAttachments, orgName,
     title: post.title || "",
     content: post.content,
     notes: post.notes || "",
+    suggested_tags: post.suggested_tags || "",
+    design_suggestions: post.design_suggestions || "",
   });
 
   useEffect(() => {
@@ -389,6 +391,8 @@ export function PostDetailClient({ post, isManager, initialAttachments, orgName,
         title: formData.title.trim() || null,
         content: formData.content,
         notes: formData.notes.trim() || null,
+        suggested_tags: formData.suggested_tags.trim() || null,
+        design_suggestions: formData.design_suggestions.trim() || null,
         status: newStatus,
       });
       if (saveError) { setError(saveError); setLoading(false); }
@@ -581,6 +585,37 @@ export function PostDetailClient({ post, isManager, initialAttachments, orgName,
                 <p className="text-sm text-gray-700 dark:text-gray-300 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">{post.notes}</p>
               ) : (
                 <p className="text-sm text-gray-400 italic">אין הערה</p>
+              )}
+            </div>
+
+            {/* Suggested tags */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">הצעות לתיוגים <span className="text-xs font-normal text-gray-400">(hashtags)</span></label>
+              {canEdit ? (
+                <input type="text" value={formData.suggested_tags}
+                  onChange={e => setFormData({...formData, suggested_tags: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="#יהוד #חינוך #קהילה" dir="ltr" />
+              ) : post.suggested_tags ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a] font-mono" dir="ltr">{post.suggested_tags}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">אין הצעות תיוגים</p>
+              )}
+            </div>
+
+            {/* Design suggestions */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">הצעות לעיצוב <span className="text-xs font-normal text-gray-400">(אופציונלי)</span></label>
+              {canEdit ? (
+                <textarea value={formData.design_suggestions}
+                  onChange={e => setFormData({...formData, design_suggestions: e.target.value})}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#3a3a3a] rounded-lg bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="רקע בצבע כחול, תמונת ילדים, לוגו עיריה בפינה..." />
+              ) : post.design_suggestions ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a]">{post.design_suggestions}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">אין הצעות עיצוב</p>
               )}
             </div>
 

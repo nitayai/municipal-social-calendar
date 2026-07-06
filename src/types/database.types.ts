@@ -31,6 +31,8 @@ export interface Database {
           approved_by: string | null; approved_by_name: string | null;
           scheduled_by_name: string | null;
           published_url: string | null;
+          suggested_tags: string | null;
+          design_suggestions: string | null;
           created_at: string; updated_at: string;
         };
         Insert: {
@@ -54,6 +56,8 @@ export interface Database {
           approved_by?: string | null; approved_by_name?: string | null;
           scheduled_by_name?: string | null;
           published_url?: string | null;
+          suggested_tags?: string | null;
+          design_suggestions?: string | null;
           created_at?: string; updated_at?: string;
         };
       };
@@ -63,9 +67,9 @@ export interface Database {
         Update: { id?: string; post_id?: string; type?: "upload" | "link"; url?: string; name?: string | null; created_at?: string; updated_at?: string };
       };
       open_tasks: {
-        Row: { id: string; title: string; notes: string | null; priority: "low" | "normal" | "high" | null; created_at: string; created_by: string | null };
-        Insert: { id?: string; title: string; notes?: string | null; priority?: "low" | "normal" | "high" | null; created_at?: string; created_by?: string | null };
-        Update: { id?: string; title?: string; notes?: string | null; priority?: "low" | "normal" | "high" | null; created_at?: string; created_by?: string | null };
+        Row: { id: string; title: string; notes: string | null; priority: "low" | "normal" | "high" | null; created_at: string; created_by: string | null; organization_id: string | null; creator_name: string | null; link: string | null; link_name: string | null };
+        Insert: { id?: string; title: string; notes?: string | null; priority?: "low" | "normal" | "high" | null; created_at?: string; created_by?: string | null; organization_id?: string | null; creator_name?: string | null; link?: string | null; link_name?: string | null };
+        Update: { id?: string; title?: string; notes?: string | null; priority?: "low" | "normal" | "high" | null; created_at?: string; created_by?: string | null; organization_id?: string | null; creator_name?: string | null; link?: string | null; link_name?: string | null };
       };
     };
   };
@@ -96,6 +100,15 @@ export type DepartmentInsert = {
   is_default?: boolean;
   created_at?: string;
   updated_at?: string;
+};
+
+export type OpenTaskAttachment = {
+  id: string;
+  task_id: string;
+  type: "upload" | "link";
+  url: string;
+  name: string | null;
+  created_at: string;
 };
 
 export type PostHistory = {
