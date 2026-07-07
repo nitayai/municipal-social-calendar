@@ -196,15 +196,24 @@ export function OpenTasksClient({ initialTasks, error }: OpenTasksClientProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !fileUploadTaskId) return;
-    setUploadingTaskId(fileUploadTaskId);
+    const taskIdForUpload = fileUploadTaskId;
+    setUploadingTaskId(taskIdForUpload);
     try {
-      const { uploadTaskFile } = await import("@/lib/actions/open-tasks");
-      const { data, error: err } = await uploadTaskFile(fileUploadTaskId, file);
-      if (err) { setGlobalError(err); }
+      // Client-side upload to storage (File objects can't be passed to server actions)
+      const { uploadFileToStorage } = await import("@/lib/upload");
+      const { url, error: uploadErr } = await uploadFileToStorage(file);
+      if (uploadErr || !url) { setGlobalError(uploadErr || "שגיאה בהעלאת קובץ"); return; }
+
+      // Server action only creates the DB record
+      const { createTaskAttachmentRecord } = await import("@/lib/actions/open-tasks");
+      const { data, error: dbErr } = await createTaskAttachmentRecord(taskIdForUpload, url, file.name);
+      if (dbErr) { setGlobalError(dbErr); }
       else if (data) {
-        setTasks(prev => prev.map(t => t.id === fileUploadTaskId ? { ...t, attachments: [...(t.attachments ?? []), data] } : t));
+        setTasks(prev => prev.map(t => t.id === taskIdForUpload ? { ...t, attachments: [...(t.attachments ?? []), data] } : t));
       }
-    } catch { setGlobalError("שגיאה בהעלאת קובץ"); }
+    } catch (err) {
+      setGlobalError("שגיאה בהעלאת קובץ: " + (err instanceof Error ? err.message : String(err)));
+    }
     finally { setUploadingTaskId(null); setFileUploadTaskId(null); if (fileInputRef.current) fileInputRef.current.value = ""; }
   };
 

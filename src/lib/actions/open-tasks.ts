@@ -205,3 +205,22 @@ export async function uploadTaskFile(taskId: string, file: File): Promise<{ data
   revalidatePath("/open-tasks");
   return { data, error: null };
 }
+
+// Called after client-side upload — just creates the DB record + logs history
+export async function createTaskAttachmentRecord(
+  taskId: string,
+  url: string,
+  name: string,
+): Promise<{ data: OpenTaskAttachment | null; error: string | null }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("open_task_attachments")
+    .insert({ task_id: taskId, type: "upload", url, name } as never)
+    .select().single<OpenTaskAttachment>();
+  if (error) return { data: null, error: error.message };
+
+  const { userId, userName } = await getCurrentUserInfo();
+  if (userId) await logTaskHistory(supabase, taskId, userId, userName, `העלאת קובץ: ${name}`);
+
+  revalidatePath("/open-tasks");
+  return { data, error: null };
+}
